@@ -1,0 +1,18 @@
+// Ls3Thumb.idl : IDL source for Ls3Thumb
+//
+
+// This file will be processed by the MIDL tool to
+// produce the type library (Ls3Thumb.tlb) and marshalling code.
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+[
+	uuid(87FEA466-062D-4D8D-87BE-D551873616C4),
+	version(1.0),
+]
+library Ls3ThumbLib
+{
+	importlib("stdole2.tlb");
+};
+
