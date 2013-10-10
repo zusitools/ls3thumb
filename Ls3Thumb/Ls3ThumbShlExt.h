@@ -2,6 +2,7 @@
 
 #pragma once
 #include "resource.h"       // main symbols
+#include "shobjidl.h"
 
 
 #include "Ls3Thumb_i.h"
@@ -21,7 +22,8 @@ class ATL_NO_VTABLE CLs3ThumbShlExt :
 	public CComObjectRootEx<CComSingleThreadModel>,
 	public CComCoClass<CLs3ThumbShlExt, &CLSID_Ls3ThumbShlExt>,
 	public ILs3ThumbShlExt,
-	public IPersistFile
+	public IPersistFile,
+	public IExtractImage
 {
 public:
 	CLs3ThumbShlExt()
@@ -35,6 +37,7 @@ DECLARE_NOT_AGGREGATABLE(CLs3ThumbShlExt)
 BEGIN_COM_MAP(CLs3ThumbShlExt)
 	COM_INTERFACE_ENTRY(ILs3ThumbShlExt)
 	COM_INTERFACE_ENTRY(IPersistFile)
+	COM_INTERFACE_ENTRY(IExtractImage)
 END_COM_MAP()
 
 
@@ -63,6 +66,17 @@ public:
 	{
 		USES_CONVERSION;
 		lstrcpyn(m_szFilename, OLE2CT(wszFile), MAX_PATH);
+		return S_OK;
+	}
+
+	// IExtractImage
+	STDMETHOD(Extract)(HBITMAP* phBmpThumbnail)
+	{
+		return S_OK;
+	}
+
+	STDMETHOD(GetLocation)(LPWSTR pszPathBuffer, DWORD cchMax, DWORD *pdwPriority, const SIZE *prgSize, DWORD dwRecClrDepth, DWORD *pdwFlags)
+	{
 		return S_OK;
 	}
 
