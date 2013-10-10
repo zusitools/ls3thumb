@@ -4,7 +4,6 @@
 #include "resource.h"       // main symbols
 
 
-
 #include "Ls3Thumb_i.h"
 
 
@@ -21,7 +20,8 @@ using namespace ATL;
 class ATL_NO_VTABLE CLs3ThumbShlExt :
 	public CComObjectRootEx<CComSingleThreadModel>,
 	public CComCoClass<CLs3ThumbShlExt, &CLSID_Ls3ThumbShlExt>,
-	public ILs3ThumbShlExt
+	public ILs3ThumbShlExt,
+	public IPersistFile
 {
 public:
 	CLs3ThumbShlExt()
@@ -34,6 +34,7 @@ DECLARE_NOT_AGGREGATABLE(CLs3ThumbShlExt)
 
 BEGIN_COM_MAP(CLs3ThumbShlExt)
 	COM_INTERFACE_ENTRY(ILs3ThumbShlExt)
+	COM_INTERFACE_ENTRY(IPersistFile)
 END_COM_MAP()
 
 
@@ -51,7 +52,23 @@ END_COM_MAP()
 
 public:
 
+	// IPersistFile
+	STDMETHOD(GetClassID)(CLSID*) { return E_NOTIMPL; }
+	STDMETHOD(IsDirty)()                  { return E_NOTIMPL; }
+	STDMETHOD(Save)(LPCOLESTR, BOOL)    { return E_NOTIMPL; }
+	STDMETHOD(SaveCompleted)(LPCOLESTR) { return E_NOTIMPL; }
+	STDMETHOD(GetCurFile)(LPOLESTR*) { return E_NOTIMPL; }
 
+	STDMETHOD(Load)(LPCOLESTR wszFile, DWORD /*dwMode*/)
+	{
+		USES_CONVERSION;
+		lstrcpyn(m_szFilename, OLE2CT(wszFile), MAX_PATH);
+		return S_OK;
+	}
+
+protected:
+	// Full path to the file of which the thumbnail should be generated
+	TCHAR m_szFilename[MAX_PATH];
 
 };
 
