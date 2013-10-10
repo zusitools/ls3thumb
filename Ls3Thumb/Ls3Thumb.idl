@@ -8,11 +8,25 @@ import "oaidl.idl";
 import "ocidl.idl";
 
 [
+	object,
+	uuid(9BAAAAB3-80BD-4CBA-BCE7-BFEA4BCC2628),
+	pointer_default(unique)
+]
+interface ILs3ThumbShlExt : IUnknown{
+};
+[
 	uuid(87FEA466-062D-4D8D-87BE-D551873616C4),
 	version(1.0),
 ]
 library Ls3ThumbLib
 {
 	importlib("stdole2.tlb");
+	[
+		uuid(0859D246-72BB-4C89-9345-66374CE7C6D5)		
+	]
+	coclass Ls3ThumbShlExt
+	{
+		[default] interface ILs3ThumbShlExt;
+	};
 };
 

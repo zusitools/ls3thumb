@@ -34,6 +34,9 @@
     <ClCompile Include="Ls3Thumb_i.c">
       <Filter>Generated Files</Filter>
     </ClCompile>
+    <ClCompile Include="Ls3ThumbShlExt.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -54,6 +57,9 @@
     <ClInclude Include="Ls3Thumb_i.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
+    <ClInclude Include="Ls3ThumbShlExt.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Ls3Thumb.rc">
@@ -69,6 +75,9 @@
     </None>
     <None Include="Ls3Thumb.def">
       <Filter>Source Files</Filter>
+    </None>
+    <None Include="Ls3ThumbShlExt.rgs">
+      <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

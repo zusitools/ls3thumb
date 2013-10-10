@@ -1,0 +1,15 @@
+HKCR
+{
+	NoRemove CLSID
+	{
+		ForceRemove {0859D246-72BB-4C89-9345-66374CE7C6D5} = s 'Ls3ThumbShlExt Class'
+		{
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+			TypeLib = s '{87FEA466-062D-4D8D-87BE-D551873616C4}'
+			Version = s '1.0'
+		}
+	}
+}
