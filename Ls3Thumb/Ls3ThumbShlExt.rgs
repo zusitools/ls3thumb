@@ -12,4 +12,12 @@ HKCR
 			Version = s '1.0'
 		}
 	}
+
+	NoRemove .ls3
+	{
+		NoRemove ShellEx
+		{
+			ForceRemove {BB2E617C-0920-11D1-9A0B-00C04FC2D6C1} = s '{0859D246-72BB-4C89-9345-66374CE7C6D5}'
+		}
+	}
 }
