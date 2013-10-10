@@ -72,6 +72,47 @@ public:
 	// IExtractImage
 	STDMETHOD(Extract)(HBITMAP* phBmpThumbnail)
 	{
+		COLORREF resultColor = RGB(255, 0, 0);
+
+		// Create a window class for our hidden window
+		WNDCLASSEX wc;
+		wc.hInstance = _AtlBaseModule.GetModuleInstance();
+		wc.lpszClassName = (LPCWSTR) L"Ls3ThumbShlExtHiddenWindow";
+		wc.lpfnWndProc = &CLs3ThumbShlExt::DummyWndProc;
+		wc.style = CS_DBLCLKS;
+		wc.cbSize = sizeof (WNDCLASSEX);
+		wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+		wc.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
+		wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+		wc.lpszMenuName = NULL;
+		wc.cbClsExtra = 0;
+		wc.cbWndExtra = 0;
+		wc.hbrBackground = (HBRUSH) COLOR_BACKGROUND;
+
+		if (RegisterClassEx(&wc))
+		{
+			resultColor = RGB(0, 0, 255);
+		}
+
+		HWND hwnd = CreateWindowEx(0,
+			(LPCWSTR) L"Ls3ThumbShlExtHiddenWindow",
+			(LPCWSTR) L"Hidden Window",
+			0,
+			CW_USEDEFAULT,
+			CW_USEDEFAULT,
+			400, 300,
+			NULL,
+			NULL,
+			_AtlBaseModule.GetModuleInstance(),
+			NULL);
+
+		if (hwnd)
+		{
+			resultColor = RGB(255, 0, 255);
+		}
+
+		DestroyWindow(hwnd);
+
 		// Create a dummy image, just for testing
 		BITMAPINFO bmInfo;
 		memset(&bmInfo.bmiHeader, 0, sizeof(BITMAPINFOHEADER));
@@ -87,11 +128,11 @@ public:
 		HBITMAP hBmpThumbnail = CreateDIBSection(tmpDC, &bmInfo,
 			DIB_RGB_COLORS, (void**) &pPixels, 0, 0);
 
-		// Fill image with green
+		// Fill image with the result color
 		for (int i = bmInfo.bmiHeader.biWidth * bmInfo.bmiHeader.biHeight - 1;
 			i >= 0; i--)
 		{
-			pPixels[i] = RGB(0, 255, 0);
+			pPixels[i] = resultColor;
 		}
 
 		*phBmpThumbnail = hBmpThumbnail;
@@ -104,6 +145,13 @@ public:
 		m_rgSize.cx = prgSize->cx;
 		m_rgSize.cy = prgSize->cy;
 		return S_OK;
+	}
+
+	// Dummy Window
+	static LRESULT CALLBACK DummyWndProc(HWND hWnd, UINT msg,
+		WPARAM wParam, LPARAM lParam)
+	{
+		return DefWindowProc(hWnd, msg, wParam, lParam);
 	}
 
 protected:
