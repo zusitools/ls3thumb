@@ -72,17 +72,44 @@ public:
 	// IExtractImage
 	STDMETHOD(Extract)(HBITMAP* phBmpThumbnail)
 	{
+		// Create a dummy image, just for testing
+		BITMAPINFO bmInfo;
+		memset(&bmInfo.bmiHeader, 0, sizeof(BITMAPINFOHEADER));
+		bmInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+		bmInfo.bmiHeader.biWidth = m_rgSize.cx;
+		bmInfo.bmiHeader.biHeight = m_rgSize.cy;
+		bmInfo.bmiHeader.biPlanes = 1;
+		bmInfo.bmiHeader.biBitCount = 32;
+
+		HDC pDC = GetDC(NULL);
+		HDC tmpDC = CreateCompatibleDC(pDC);
+		UINT32 *pPixels;
+		HBITMAP hBmpThumbnail = CreateDIBSection(tmpDC, &bmInfo,
+			DIB_RGB_COLORS, (void**) &pPixels, 0, 0);
+
+		// Fill image with green
+		for (int i = bmInfo.bmiHeader.biWidth * bmInfo.bmiHeader.biHeight - 1;
+			i >= 0; i--)
+		{
+			pPixels[i] = RGB(0, 255, 0);
+		}
+
+		*phBmpThumbnail = hBmpThumbnail;
 		return S_OK;
 	}
 
 	STDMETHOD(GetLocation)(LPWSTR pszPathBuffer, DWORD cchMax, DWORD *pdwPriority, const SIZE *prgSize, DWORD dwRecClrDepth, DWORD *pdwFlags)
 	{
+		// Save requested thumbnail size
+		m_rgSize.cx = prgSize->cx;
+		m_rgSize.cy = prgSize->cy;
 		return S_OK;
 	}
 
 protected:
 	// Full path to the file of which the thumbnail should be generated
 	TCHAR m_szFilename[MAX_PATH];
+	SIZE m_rgSize;
 
 };
 
