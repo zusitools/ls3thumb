@@ -118,7 +118,7 @@ public:
 			return E_FAIL;
 		}
 
-		m_d3ddev->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 45, 100), 1.0f, 0);
+		m_d3ddev->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(116, 165, 210), 1.0f, 0);
 		m_d3ddev->BeginScene();
 		m_d3ddev->EndScene();
 		m_d3ddev->Present(NULL, NULL, NULL, NULL);
