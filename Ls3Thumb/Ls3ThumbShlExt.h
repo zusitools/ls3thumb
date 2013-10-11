@@ -3,7 +3,9 @@
 #pragma once
 #include "resource.h"       // main symbols
 #include "shobjidl.h"
-
+#include "windows.h"
+#include "windowsx.h"
+#include "d3d9.h"
 
 #include "Ls3Thumb_i.h"
 
