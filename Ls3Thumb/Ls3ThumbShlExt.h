@@ -74,6 +74,7 @@ public:
 	// IExtractImage
 	STDMETHOD(Extract)(HBITMAP* phBmpThumbnail)
 	{
+		HRESULT hr;
 		COLORREF resultColor = RGB(255, 0, 0);
 
 		// Create a window class for our hidden window
@@ -91,9 +92,9 @@ public:
 		wc.cbWndExtra = 0;
 		wc.hbrBackground = (HBRUSH) COLOR_BACKGROUND;
 
-		if (RegisterClassEx(&wc))
+		if (FAILED(hr = RegisterClassEx(&wc)))
 		{
-			resultColor = RGB(0, 0, 255);
+			return hr;
 		}
 
 		HWND hwnd = CreateWindowEx(0,
@@ -108,14 +109,14 @@ public:
 			_AtlBaseModule.GetModuleInstance(),
 			NULL);
 
-		if (hwnd)
-		{
-			resultColor = RGB(255, 0, 255);
-		}
-
-		if (FAILED(this->InitDirect3D(hwnd)))
+		if (hwnd == NULL)
 		{
 			return E_FAIL;
+		}
+
+		if (FAILED(hr = this->InitDirect3D(hwnd)))
+		{
+			return hr;
 		}
 
 		m_d3ddev->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(116, 165, 210), 1.0f, 0);
@@ -127,15 +128,6 @@ public:
 		this->CleanUpDirect3D();
 
 		DestroyWindow(hwnd);
-
-		
-
-		// Fill image with the result color
-		/*for (int i = bmInfo.bmiHeader.biWidth * bmInfo.bmiHeader.biHeight - 1;
-			i >= 0; i--)
-		{
-			pPixels[i] = resultColor;
-		}*/
 		return S_OK;
 	}
 
@@ -180,7 +172,9 @@ public:
 		IDirect3DSurface9 *renderTarget;
 		hr = m_d3ddev->GetRenderTarget(0, &renderTarget);
 		if (!renderTarget || FAILED(hr))
-			return false;
+		{
+			return hr;
+		}
 
 		D3DSURFACE_DESC rtDesc;
 		renderTarget->GetDesc(&rtDesc);
@@ -190,21 +184,28 @@ public:
 		{
 			hr = m_d3ddev->CreateRenderTarget(rtDesc.Width, rtDesc.Height, rtDesc.Format, D3DMULTISAMPLE_NONE, 0, FALSE, &resolvedSurface, NULL);
 			if (FAILED(hr))
-				return false;
+			{
+				return hr;
+			}
+
 			hr = m_d3ddev->StretchRect(renderTarget, NULL, resolvedSurface, NULL, D3DTEXF_NONE);
 			if (FAILED(hr))
-				return false;
+			{
+				return hr;
+			}
+
 			renderTarget = resolvedSurface;
 		}
 
 		IDirect3DSurface9 *offscreenSurface;
 		hr = m_d3ddev->CreateOffscreenPlainSurface(rtDesc.Width, rtDesc.Height, rtDesc.Format, D3DPOOL_SYSTEMMEM, &offscreenSurface, NULL);
 		if (FAILED(hr))
-			return false;
+		{
+			return hr;
+		}
 
 		hr = m_d3ddev->GetRenderTargetData(renderTarget, offscreenSurface);
-		bool ok = SUCCEEDED(hr);
-		if (ok)
+		if (SUCCEEDED(hr))
 		{
 			// Here we have data in offscreenSurface.
 			D3DLOCKED_RECT lr;
@@ -252,14 +253,11 @@ public:
 				*phBmpBitmap = hBmpThumbnail;
 				
 				offscreenSurface->UnlockRect();
-			}
-			else
-			{
-				ok = false;
+				hr = S_OK;
 			}
 		}
 
-		return ok;
+		return hr;
 	}
 
 protected:
