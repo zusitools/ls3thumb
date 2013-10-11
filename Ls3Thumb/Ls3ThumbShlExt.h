@@ -82,15 +82,15 @@ public:
 		wc.hInstance = _AtlBaseModule.GetModuleInstance();
 		wc.lpszClassName = (LPCWSTR) L"Ls3ThumbShlExtHiddenWindow";
 		wc.lpfnWndProc = DefWindowProc;
-		wc.style = CS_DBLCLKS;
+		wc.style = 0;
 		wc.cbSize = sizeof (WNDCLASSEX);
-		wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-		wc.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
-		wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+		wc.hIcon = NULL;
+		wc.hIconSm = NULL;
+		wc.hCursor = NULL;
 		wc.lpszMenuName = NULL;
 		wc.cbClsExtra = 0;
 		wc.cbWndExtra = 0;
-		wc.hbrBackground = (HBRUSH) COLOR_BACKGROUND;
+		wc.hbrBackground = NULL;
 
 		if (FAILED(hr = RegisterClassEx(&wc)))
 		{
