@@ -80,7 +80,7 @@ public:
 		WNDCLASSEX wc;
 		wc.hInstance = _AtlBaseModule.GetModuleInstance();
 		wc.lpszClassName = (LPCWSTR) L"Ls3ThumbShlExtHiddenWindow";
-		wc.lpfnWndProc = &CLs3ThumbShlExt::DummyWndProc;
+		wc.lpfnWndProc = DefWindowProc;
 		wc.style = CS_DBLCLKS;
 		wc.cbSize = sizeof (WNDCLASSEX);
 		wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
@@ -145,13 +145,6 @@ public:
 		m_rgSize.cx = prgSize->cx;
 		m_rgSize.cy = prgSize->cy;
 		return S_OK;
-	}
-
-	// Dummy Window
-	static LRESULT CALLBACK DummyWndProc(HWND hWnd, UINT msg,
-		WPARAM wParam, LPARAM lParam)
-	{
-		return DefWindowProc(hWnd, msg, wParam, lParam);
 	}
 
 	HRESULT CLs3ThumbShlExt::InitDirect3D(HWND hWnd)
