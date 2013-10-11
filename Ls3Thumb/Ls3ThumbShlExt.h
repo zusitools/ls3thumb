@@ -113,6 +113,18 @@ public:
 			resultColor = RGB(255, 0, 255);
 		}
 
+		if (SUCCEEDED(this->InitDirect3D(hwnd)))
+		{
+			resultColor = RGB(128, 128, 128);
+
+			m_d3ddev->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 45, 100), 1.0f, 0);
+			m_d3ddev->BeginScene();
+			m_d3ddev->EndScene();
+			m_d3ddev->Present(NULL, NULL, NULL, NULL);
+
+			this->CleanUpDirect3D();
+		}
+
 		DestroyWindow(hwnd);
 
 		// Create a dummy image, just for testing
@@ -156,10 +168,39 @@ public:
 		return DefWindowProc(hWnd, msg, wParam, lParam);
 	}
 
+	HRESULT CLs3ThumbShlExt::InitDirect3D(HWND hWnd)
+	{
+		m_d3d = Direct3DCreate9(D3D_SDK_VERSION);
+		D3DPRESENT_PARAMETERS d3dpp;
+		ZeroMemory(&d3dpp, sizeof(d3dpp));
+
+		d3dpp.Windowed = TRUE;
+		d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
+		d3dpp.PresentationInterval = D3DPRESENT_DONOTWAIT;
+		d3dpp.hDeviceWindow = hWnd;
+
+		return m_d3d->CreateDevice(D3DADAPTER_DEFAULT,
+			D3DDEVTYPE_HAL,
+			hWnd,
+			D3DCREATE_SOFTWARE_VERTEXPROCESSING,
+			&d3dpp,
+			&m_d3ddev);
+	}
+
+	void CLs3ThumbShlExt::CleanUpDirect3D()
+	{
+		m_d3ddev->Release();
+		m_d3ddev = NULL;
+		m_d3d->Release();
+		m_d3d = NULL;
+	}
+
 protected:
 	// Full path to the file of which the thumbnail should be generated
 	TCHAR m_szFilename[MAX_PATH];
 	SIZE m_rgSize;
+	LPDIRECT3D9 m_d3d;
+	LPDIRECT3DDEVICE9 m_d3ddev;
 
 };
 
