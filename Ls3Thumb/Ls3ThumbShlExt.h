@@ -9,7 +9,8 @@
 
 #include "Ls3Thumb_i.h"
 
-
+struct CUSTOMVERTEX { FLOAT X, Y, Z, RHW; DWORD COLOR; };
+#define CUSTOMFVF (D3DFVF_XYZRHW | D3DFVF_DIFFUSE)
 
 #if defined(_WIN32_WCE) && !defined(_CE_DCOM) && !defined(_CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA)
 #error "Single-threaded COM objects are not properly supported on Windows CE platform, such as the Windows Mobile platforms that do not include full DCOM support. Define _CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA to force ATL to support creating single-thread COM object's and allow use of it's single-threaded COM object implementations. The threading model in your rgs file was set to 'Free' as that is the only threading model supported in non DCOM Windows CE platforms."
@@ -119,10 +120,40 @@ public:
 			return hr;
 		}
 
-		m_d3ddev->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(116, 165, 210), 1.0f, 0);
-		m_d3ddev->BeginScene();
-		m_d3ddev->EndScene();
-		m_d3ddev->Present(NULL, NULL, NULL, NULL);
+		// create the vertices using the CUSTOMVERTEX struct
+		CUSTOMVERTEX vertices [] =
+		{
+			{ 40.0f, 6.25f, 0.5f, 1.0f, D3DCOLOR_XRGB(0, 0, 255), },
+			{ 65.0f, 50.0f, 0.5f, 1.0f, D3DCOLOR_XRGB(0, 255, 0), },
+			{ 15.0f, 50.0f, 0.5f, 1.0f, D3DCOLOR_XRGB(255, 0, 0), },
+		};
+
+		// create a vertex buffer interface called v_buffer
+		m_d3ddev->CreateVertexBuffer(3 * sizeof(CUSTOMVERTEX),
+			0,
+			CUSTOMFVF,
+			D3DPOOL_MANAGED,
+			&m_vbuffer,
+			NULL);
+
+		VOID* pVoid;    // a void pointer
+
+		// lock v_buffer and load the vertices into it
+		m_vbuffer->Lock(0, 0, (void**) &pVoid, 0);
+		memcpy(pVoid, vertices, sizeof(vertices));
+		m_vbuffer->Unlock();
+
+		m_d3ddev->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 165, 210), 1.0f, 0);
+
+		if (FAILED(m_d3ddev->BeginScene())) return E_FAIL;
+
+		// TODO render stuff here
+		if (FAILED(m_d3ddev->SetFVF(CUSTOMFVF))) return E_FAIL;
+		if (FAILED(m_d3ddev->SetStreamSource(0, m_vbuffer, 0, sizeof(CUSTOMVERTEX)))) return E_FAIL;
+		if (FAILED(m_d3ddev->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 1))) return E_FAIL;
+
+		if (FAILED(m_d3ddev->EndScene())) return E_FAIL;
+		if (FAILED(m_d3ddev->Present(NULL, NULL, NULL, NULL))) return E_FAIL;
 
 		this->ReadImageFromDirect3D(phBmpThumbnail);
 		this->CleanUpDirect3D();
@@ -164,6 +195,8 @@ public:
 		m_d3ddev = NULL;
 		m_d3d->Release();
 		m_d3d = NULL;
+		m_vbuffer->Release();
+		m_vbuffer = NULL;
 	}
 
 	HRESULT CLs3ThumbShlExt::ReadImageFromDirect3D(HBITMAP *phBmpBitmap)
@@ -266,6 +299,7 @@ protected:
 	SIZE m_rgSize;
 	LPDIRECT3D9 m_d3d;
 	LPDIRECT3DDEVICE9 m_d3ddev;
+	LPDIRECT3DVERTEXBUFFER9 m_vbuffer;
 
 };
 
