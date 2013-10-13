@@ -274,7 +274,7 @@ public:
 				{
 					for (int j = 0; j < rtDesc.Width; j++)
 					{
-						pPixels[i * rtDesc.Width + j] = RGB(
+						pPixels[(rtDesc.Height - 1 - i) * rtDesc.Width + j] = RGB(
 							data[surfaceOffset + j * 4 + 0],
 							data[surfaceOffset + j * 4 + 1],
 							data[surfaceOffset + j * 4 + 2]);
