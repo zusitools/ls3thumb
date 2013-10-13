@@ -1,23 +1,48 @@
 // Ls3ThumbShlExt.h : Declaration of the CLs3ThumbShlExt
 
 #pragma once
+
+// include the Direct3D Library files
+#pragma comment (lib, "d3d9.lib")
+#pragma comment (lib, "d3dx9.lib")
+
 #include "resource.h"       // main symbols
 #include "shobjidl.h"
 #include "windows.h"
 #include "windowsx.h"
 #include "d3d9.h"
+#include "d3dx9.h"
+
+#include "rapidxml-1.13/rapidxml.hpp"
+#include "rapidxml-1.13/rapidxml_utils.hpp"
 
 #include "Ls3Thumb_i.h"
 
-struct CUSTOMVERTEX { FLOAT X, Y, Z, RHW; DWORD COLOR; };
-#define CUSTOMFVF (D3DFVF_XYZRHW | D3DFVF_DIFFUSE)
+struct ZUSIVERTEX {
+	FLOAT X, Y, Z;
+	// FLOAT NX, NY, NZ;
+	// DWORD DIFFUSECOLOR;
+	// DWORD SPECULARCOLOR;
+	// FLOAT U1, U2;
+};
+
+#define ZUSIFVF (D3DFVF_XYZ /* | D3DFVF_NORMAL | D3DFVF_DIFFUSE */ \
+	/* | D3DFVF_SPECULAR | D3DFVF_TEX1 */)
+
+struct SubSet
+{
+	LPDIRECT3DVERTEXBUFFER9 vbuffer;
+	LPDIRECT3DINDEXBUFFER9 ibuffer;
+	std::vector<ZUSIVERTEX> vertices;
+	std::vector<UINT32> faceIndices;
+};
 
 #if defined(_WIN32_WCE) && !defined(_CE_DCOM) && !defined(_CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA)
 #error "Single-threaded COM objects are not properly supported on Windows CE platform, such as the Windows Mobile platforms that do not include full DCOM support. Define _CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA to force ATL to support creating single-thread COM object's and allow use of it's single-threaded COM object implementations. The threading model in your rgs file was set to 'Free' as that is the only threading model supported in non DCOM Windows CE platforms."
 #endif
 
 using namespace ATL;
-
+using namespace rapidxml;
 
 // CLs3ThumbShlExt
 
@@ -76,7 +101,93 @@ public:
 	STDMETHOD(Extract)(HBITMAP* phBmpThumbnail)
 	{
 		HRESULT hr;
-		COLORREF resultColor = RGB(255, 0, 0);
+
+		char fileName[MAX_PATH];
+		size_t i;
+		wcstombs_s(&i, fileName, MAX_PATH, m_szFilename, MAX_PATH);
+		rapidxml::file<> xmlFile(fileName); // Default template is char
+		xml_document<> doc;
+		doc.parse<0>(xmlFile.data());
+
+		std::vector<SubSet*> subsets;
+
+		xml_node<> *rootNode = doc.first_node("Zusi");
+		if (!rootNode) {
+			return E_FAIL;
+		}
+
+		xml_node<> *landschaftNode = rootNode->first_node("Landschaft");
+		if (!landschaftNode) {
+			return E_FAIL;
+		}
+
+		for (xml_node<> *subsetNode = landschaftNode->first_node("SubSet");
+			subsetNode; subsetNode = subsetNode->next_sibling("SubSet"))
+		{
+			SubSet *subset = new SubSet();
+			subsets.push_back(subset);
+
+			for (xml_node<> *node = subsetNode->first_node(); node;
+				node = node->next_sibling())
+			{
+				if (_stricmp(node->name(), "Vertex") == 0)
+				{
+					subset->vertices.push_back(ZUSIVERTEX());
+					ZUSIVERTEX& vertex = subset->vertices[subset->vertices.size() - 1];
+					ZeroMemory(&vertex, sizeof(ZUSIVERTEX));
+
+					for (xml_node<> *vertexChildNode = node->first_node();
+						vertexChildNode;
+						vertexChildNode = vertexChildNode->next_sibling())
+					{
+						if (_stricmp(vertexChildNode->name(), "p") == 0)
+						{
+							for (xml_attribute<> *attr = vertexChildNode->first_attribute();
+								attr; attr = attr->next_attribute())
+							{
+								if (_stricmp(attr->name(), "x") == 0)
+								{
+									vertex.X = atof(attr->value());
+								}
+								else if (_stricmp(attr->name(), "y") == 0)
+								{
+									vertex.Y = atof(attr->value());
+								}
+								else if (_stricmp(attr->name(), "z") == 0)
+								{
+									vertex.Z = atof(attr->value());
+								}
+							}
+						}
+					}
+				}
+				else if (_stricmp(node->name(), "Face") == 0)
+				{
+					xml_attribute<> *indexAttr = node->first_attribute("i");
+					if (indexAttr)
+					{
+						UINT32 faceIndices[3];
+
+						unsigned char index = 0;
+						char *context = NULL;
+						char *token = strtok_s(indexAttr->value(), ";", &context);
+						while (index < 3 && token != NULL)
+						{
+							faceIndices[index] = atoi(token);
+							index++;
+							token = strtok_s(NULL, ";", &context);
+						}
+
+						if (index == 3)
+						{
+							for (int i = 0; i < 3; i++) {
+								subset->faceIndices.push_back(faceIndices[i]);
+							}
+						}
+					}
+				}
+			}
+		}
 
 		// Create a window class for our hidden window
 		WNDCLASSEX wc;
@@ -120,43 +231,66 @@ public:
 			return hr;
 		}
 
-		// create the vertices using the CUSTOMVERTEX struct
-		CUSTOMVERTEX vertices [] =
-		{
-			{ 40.0f, 6.25f, 0.5f, 1.0f, D3DCOLOR_XRGB(0, 0, 255), },
-			{ 65.0f, 50.0f, 0.5f, 1.0f, D3DCOLOR_XRGB(0, 255, 0), },
-			{ 15.0f, 50.0f, 0.5f, 1.0f, D3DCOLOR_XRGB(255, 0, 0), },
-		};
+		D3DXVECTOR3 cameraPosition(5.0f, 5.0f, 5.0f);
+		D3DXVECTOR3 cameraTarget(0.0f, 0.0f, 0.0f);
+		D3DXVECTOR3 cameraUp(0.0f, 1.0f, 0.0f);
+		D3DXMATRIX viewMatrix;
+		D3DXMatrixLookAtLH(&viewMatrix, &cameraPosition, &cameraTarget, &cameraUp);
 
-		// create a vertex buffer interface called v_buffer
-		m_d3ddev->CreateVertexBuffer(3 * sizeof(CUSTOMVERTEX),
-			0,
-			CUSTOMFVF,
-			D3DPOOL_MANAGED,
-			&m_vbuffer,
-			NULL);
+		m_d3ddev->SetTransform(D3DTS_VIEW, &viewMatrix);
 
-		VOID* pVoid;    // a void pointer
+		// Setup the projection matrix
+		D3DXMATRIX projectionMatrix;
+		D3DXMatrixPerspectiveFovLH(&projectionMatrix, D3DX_PI / 4, (float) m_rgSize.cx / (float) m_rgSize.cy, 0.1f, 100.0f);
 
-		// lock v_buffer and load the vertices into it
-		m_vbuffer->Lock(0, 0, (void**) &pVoid, 0);
-		memcpy(pVoid, vertices, sizeof(vertices));
-		m_vbuffer->Unlock();
+		m_d3ddev->SetTransform(D3DTS_PROJECTION, &projectionMatrix);
+		m_d3ddev->SetRenderState(D3DRS_LIGHTING, FALSE);    // turn off the 3D lighting
 
 		m_d3ddev->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 165, 210), 1.0f, 0);
 
 		if (FAILED(m_d3ddev->BeginScene())) return E_FAIL;
+		if (FAILED(m_d3ddev->SetFVF(ZUSIFVF))) return E_FAIL;
 
-		// TODO render stuff here
-		if (FAILED(m_d3ddev->SetFVF(CUSTOMFVF))) return E_FAIL;
-		if (FAILED(m_d3ddev->SetStreamSource(0, m_vbuffer, 0, sizeof(CUSTOMVERTEX)))) return E_FAIL;
-		if (FAILED(m_d3ddev->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 1))) return E_FAIL;
+		VOID* pData;
+
+		for (auto it = subsets.begin(); it != subsets.end(); it++)
+		{
+			if (FAILED(m_d3ddev->CreateVertexBuffer(
+				(*it)->vertices.size() * sizeof(ZUSIVERTEX),
+				0,
+				ZUSIFVF,
+				D3DPOOL_MANAGED,
+				&((*it)->vbuffer),
+				NULL))) return E_FAIL;
+
+			(*it)->vbuffer->Lock(0, 0, (void**) &pData, 0);
+			memcpy(pData, (*it)->vertices.data(), (*it)->vertices.size() * sizeof(ZUSIVERTEX));
+			(*it)->vbuffer->Unlock();
+
+			if (FAILED(m_d3ddev->CreateIndexBuffer(
+				(*it)->faceIndices.size() * sizeof(UINT32),
+				0,
+				D3DFMT_INDEX32,
+				D3DPOOL_MANAGED,
+				&((*it)->ibuffer),
+				NULL))) return E_FAIL;
+
+			(*it)->ibuffer->Lock(0, 0, (void**) &pData, 0);
+			memcpy(pData, (*it)->faceIndices.data(), (*it)->faceIndices.size() * sizeof(UINT32));
+			(*it)->ibuffer->Unlock();
+
+			if (FAILED(hr = m_d3ddev->SetIndices((*it)->ibuffer))) return hr;
+			if (FAILED(hr = m_d3ddev->SetStreamSource(0, (*it)->vbuffer, 0, sizeof(ZUSIVERTEX)))) return hr;
+			if (FAILED(hr = m_d3ddev->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, (*it)->vertices.size(), 0, (*it)->faceIndices.size() / 3))) return hr;
+		}
 
 		if (FAILED(m_d3ddev->EndScene())) return E_FAIL;
 		if (FAILED(m_d3ddev->Present(NULL, NULL, NULL, NULL))) return E_FAIL;
 
 		this->ReadImageFromDirect3D(phBmpThumbnail);
 		this->CleanUpDirect3D();
+
+		// TODO delete subsets
 
 		DestroyWindow(hwnd);
 		return S_OK;
@@ -195,8 +329,6 @@ public:
 		m_d3ddev = NULL;
 		m_d3d->Release();
 		m_d3d = NULL;
-		m_vbuffer->Release();
-		m_vbuffer = NULL;
 	}
 
 	HRESULT CLs3ThumbShlExt::ReadImageFromDirect3D(HBITMAP *phBmpBitmap)
@@ -299,7 +431,6 @@ protected:
 	SIZE m_rgSize;
 	LPDIRECT3D9 m_d3d;
 	LPDIRECT3DDEVICE9 m_d3ddev;
-	LPDIRECT3DVERTEXBUFFER9 m_vbuffer;
 
 };
 
