@@ -226,6 +226,7 @@
       </PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Ls3FileReader.cpp" />
+    <ClCompile Include="Ls3FileRenderer.cpp" />
     <ClCompile Include="Ls3Thumb.cpp" />
     <ClCompile Include="Ls3ThumbShlExt.cpp" />
     <ClCompile Include="Ls3Thumb_i.c">
@@ -267,6 +268,7 @@
     <ClInclude Include="dllmain.h" />
     <ClInclude Include="Ls3File.h" />
     <ClInclude Include="Ls3FileReader.h" />
+    <ClInclude Include="Ls3FileRenderer.h" />
     <ClInclude Include="Ls3ThumbShlExt.h" />
     <ClInclude Include="Ls3Thumb_i.h" />
     <ClInclude Include="rapidxml-1.13\rapidxml.hpp" />
