@@ -31,8 +31,6 @@ struct ZUSIVERTEX {
 
 struct SubSet
 {
-	LPDIRECT3DVERTEXBUFFER9 vbuffer;
-	LPDIRECT3DINDEXBUFFER9 ibuffer;
 	std::vector<ZUSIVERTEX> vertices;
 	std::vector<UINT32> faceIndices;
 };
@@ -246,7 +244,7 @@ public:
 		m_d3ddev->SetTransform(D3DTS_PROJECTION, &projectionMatrix);
 		m_d3ddev->SetRenderState(D3DRS_LIGHTING, FALSE);    // turn off the 3D lighting
 
-		m_d3ddev->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 165, 210), 1.0f, 0);
+		m_d3ddev->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(255, 165, 210), 1.0f, 0);
 
 		if (FAILED(m_d3ddev->BeginScene())) return E_FAIL;
 		if (FAILED(m_d3ddev->SetFVF(ZUSIFVF))) return E_FAIL;
@@ -260,27 +258,27 @@ public:
 				0,
 				ZUSIFVF,
 				D3DPOOL_MANAGED,
-				&((*it)->vbuffer),
+				&(m_vbuffer),
 				NULL))) return E_FAIL;
 
-			(*it)->vbuffer->Lock(0, 0, (void**) &pData, 0);
+			m_vbuffer->Lock(0, 0, (void**) &pData, 0);
 			memcpy(pData, (*it)->vertices.data(), (*it)->vertices.size() * sizeof(ZUSIVERTEX));
-			(*it)->vbuffer->Unlock();
+			m_vbuffer->Unlock();
 
 			if (FAILED(m_d3ddev->CreateIndexBuffer(
 				(*it)->faceIndices.size() * sizeof(UINT32),
 				0,
 				D3DFMT_INDEX32,
 				D3DPOOL_MANAGED,
-				&((*it)->ibuffer),
+				&(m_ibuffer),
 				NULL))) return E_FAIL;
 
-			(*it)->ibuffer->Lock(0, 0, (void**) &pData, 0);
+			m_ibuffer->Lock(0, 0, (void**) &pData, 0);
 			memcpy(pData, (*it)->faceIndices.data(), (*it)->faceIndices.size() * sizeof(UINT32));
-			(*it)->ibuffer->Unlock();
+			m_ibuffer->Unlock();
 
-			if (FAILED(hr = m_d3ddev->SetIndices((*it)->ibuffer))) return hr;
-			if (FAILED(hr = m_d3ddev->SetStreamSource(0, (*it)->vbuffer, 0, sizeof(ZUSIVERTEX)))) return hr;
+			if (FAILED(hr = m_d3ddev->SetIndices(m_ibuffer))) return hr;
+			if (FAILED(hr = m_d3ddev->SetStreamSource(0, m_vbuffer, 0, sizeof(ZUSIVERTEX)))) return hr;
 			if (FAILED(hr = m_d3ddev->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, (*it)->vertices.size(), 0, (*it)->faceIndices.size() / 3))) return hr;
 		}
 
@@ -431,6 +429,9 @@ protected:
 	SIZE m_rgSize;
 	LPDIRECT3D9 m_d3d;
 	LPDIRECT3DDEVICE9 m_d3ddev;
+
+	LPDIRECT3DVERTEXBUFFER9 m_vbuffer;
+	LPDIRECT3DINDEXBUFFER9 m_ibuffer;
 
 };
 
