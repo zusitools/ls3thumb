@@ -122,21 +122,39 @@ HRESULT Ls3FileRenderer::RenderScene(Ls3File &file, SIZE &size)
 	D3DXMATRIX viewMatrix;
 	D3DXMatrixLookAtLH(&viewMatrix, &cameraPosition, &cameraTarget, &cameraUp);
 
-	m_d3ddev->SetTransform(D3DTS_VIEW, &viewMatrix);
+	if (FAILED(hr = m_d3ddev->SetTransform(D3DTS_VIEW, &viewMatrix)))
+	{
+		return hr;
+	}
 
 	// Setup the projection matrix
 	D3DXMATRIX projectionMatrix;
 	D3DXMatrixPerspectiveFovLH(&projectionMatrix, D3DX_PI / 4, (float) size.cx / (float) size.cy, 0.1f, 100.0f);
 
-	m_d3ddev->SetTransform(D3DTS_PROJECTION, &projectionMatrix);
+	if (FAILED(hr = m_d3ddev->SetTransform(D3DTS_PROJECTION, &projectionMatrix)))
+	{
+		return hr;
+	}
 
 	// Turn off the 3D lighting
-	m_d3ddev->SetRenderState(D3DRS_LIGHTING, FALSE);
+	if (FAILED(hr = m_d3ddev->SetRenderState(D3DRS_LIGHTING, FALSE)))
+	{
+		return hr;
+	}
 
-	m_d3ddev->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(116, 165, 210), 1.0f, 0);
+	if (FAILED(hr = m_d3ddev->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(116, 165, 210), 1.0f, 0)))
+	{
+		return hr;
+	}
 
-	if (FAILED(m_d3ddev->BeginScene())) return E_FAIL;
-	if (FAILED(m_d3ddev->SetFVF(ZUSIFVF))) return E_FAIL;
+	if (FAILED(hr = m_d3ddev->BeginScene()))
+	{
+		return hr;
+	}
+	if (FAILED(hr = m_d3ddev->SetFVF(ZUSIFVF)))
+	{
+		return hr;
+	}
 
 	VOID* pData;
 	LPDIRECT3DVERTEXBUFFER9 pVertexBuffer;
