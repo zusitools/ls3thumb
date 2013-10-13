@@ -37,6 +37,9 @@
     <ClCompile Include="Ls3ThumbShlExt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Ls3FileReader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -70,6 +73,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="rapidxml-1.13\rapidxml_utils.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Ls3File.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Ls3FileReader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

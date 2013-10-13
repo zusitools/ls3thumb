@@ -13,34 +13,21 @@
 #include "d3d9.h"
 #include "d3dx9.h"
 
-#include "rapidxml-1.13/rapidxml.hpp"
-#include "rapidxml-1.13/rapidxml_utils.hpp"
+#include <memory>
+
+#include "Ls3File.h"
+#include "Ls3FileReader.h"
 
 #include "Ls3Thumb_i.h"
 
-struct ZUSIVERTEX {
-	FLOAT X, Y, Z;
-	// FLOAT NX, NY, NZ;
-	// DWORD DIFFUSECOLOR;
-	// DWORD SPECULARCOLOR;
-	// FLOAT U1, U2;
-};
-
 #define ZUSIFVF (D3DFVF_XYZ /* | D3DFVF_NORMAL | D3DFVF_DIFFUSE */ \
 	/* | D3DFVF_SPECULAR | D3DFVF_TEX1 */)
-
-struct SubSet
-{
-	std::vector<ZUSIVERTEX> vertices;
-	std::vector<UINT32> faceIndices;
-};
 
 #if defined(_WIN32_WCE) && !defined(_CE_DCOM) && !defined(_CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA)
 #error "Single-threaded COM objects are not properly supported on Windows CE platform, such as the Windows Mobile platforms that do not include full DCOM support. Define _CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA to force ATL to support creating single-thread COM object's and allow use of it's single-threaded COM object implementations. The threading model in your rgs file was set to 'Free' as that is the only threading model supported in non DCOM Windows CE platforms."
 #endif
 
 using namespace ATL;
-using namespace rapidxml;
 
 // CLs3ThumbShlExt
 
@@ -103,88 +90,11 @@ public:
 		char fileName[MAX_PATH];
 		size_t i;
 		wcstombs_s(&i, fileName, MAX_PATH, m_szFilename, MAX_PATH);
-		rapidxml::file<> xmlFile(fileName); // Default template is char
-		xml_document<> doc;
-		doc.parse<0>(xmlFile.data());
+		
+		std::unique_ptr<Ls3File> ls3File(Ls3FileReader::readLs3File(fileName));
 
-		std::vector<SubSet*> subsets;
-
-		xml_node<> *rootNode = doc.first_node("Zusi");
-		if (!rootNode) {
-			return E_FAIL;
-		}
-
-		xml_node<> *landschaftNode = rootNode->first_node("Landschaft");
-		if (!landschaftNode) {
-			return E_FAIL;
-		}
-
-		for (xml_node<> *subsetNode = landschaftNode->first_node("SubSet");
-			subsetNode; subsetNode = subsetNode->next_sibling("SubSet"))
-		{
-			SubSet *subset = new SubSet();
-			subsets.push_back(subset);
-
-			for (xml_node<> *node = subsetNode->first_node(); node;
-				node = node->next_sibling())
-			{
-				if (_stricmp(node->name(), "Vertex") == 0)
-				{
-					subset->vertices.push_back(ZUSIVERTEX());
-					ZUSIVERTEX& vertex = subset->vertices[subset->vertices.size() - 1];
-					ZeroMemory(&vertex, sizeof(ZUSIVERTEX));
-
-					for (xml_node<> *vertexChildNode = node->first_node();
-						vertexChildNode;
-						vertexChildNode = vertexChildNode->next_sibling())
-					{
-						if (_stricmp(vertexChildNode->name(), "p") == 0)
-						{
-							for (xml_attribute<> *attr = vertexChildNode->first_attribute();
-								attr; attr = attr->next_attribute())
-							{
-								if (_stricmp(attr->name(), "x") == 0)
-								{
-									vertex.X = atof(attr->value());
-								}
-								else if (_stricmp(attr->name(), "y") == 0)
-								{
-									vertex.Y = atof(attr->value());
-								}
-								else if (_stricmp(attr->name(), "z") == 0)
-								{
-									vertex.Z = atof(attr->value());
-								}
-							}
-						}
-					}
-				}
-				else if (_stricmp(node->name(), "Face") == 0)
-				{
-					xml_attribute<> *indexAttr = node->first_attribute("i");
-					if (indexAttr)
-					{
-						UINT32 faceIndices[3];
-
-						unsigned char index = 0;
-						char *context = NULL;
-						char *token = strtok_s(indexAttr->value(), ";", &context);
-						while (index < 3 && token != NULL)
-						{
-							faceIndices[index] = atoi(token);
-							index++;
-							token = strtok_s(NULL, ";", &context);
-						}
-
-						if (index == 3)
-						{
-							for (int i = 0; i < 3; i++) {
-								subset->faceIndices.push_back(faceIndices[i]);
-							}
-						}
-					}
-				}
-			}
+		if (ls3File->subsets.size() == 0) {
+			return S_OK;
 		}
 
 		// Create a window class for our hidden window
@@ -251,35 +161,42 @@ public:
 
 		VOID* pData;
 
-		for (auto it = subsets.begin(); it != subsets.end(); it++)
+		for (auto it = ls3File->subsets.begin(); it != ls3File->subsets.end(); it++)
 		{
-			if (FAILED(m_d3ddev->CreateVertexBuffer(
-				(*it)->vertices.size() * sizeof(ZUSIVERTEX),
-				0,
-				ZUSIFVF,
-				D3DPOOL_MANAGED,
-				&(m_vbuffer),
-				NULL))) return E_FAIL;
+			const Ls3MeshSubset subset = *it;
+			const size_t numVertices = subset.vertices.size();
+			const size_t numFaceIndices = subset.faceIndices.size();
+			const size_t numFaces = numFaceIndices / 3;
 
+			if (numFaces == 0) {
+				continue;
+			}
+
+			if (FAILED(hr = m_d3ddev->CreateVertexBuffer(
+				numVertices * sizeof(ZUSIVERTEX),
+				0, ZUSIFVF, D3DPOOL_MANAGED, &m_vbuffer, NULL)))
+			{
+				return hr;
+			}
+			
 			m_vbuffer->Lock(0, 0, (void**) &pData, 0);
-			memcpy(pData, (*it)->vertices.data(), (*it)->vertices.size() * sizeof(ZUSIVERTEX));
+			memcpy(pData, subset.vertices.data(), numVertices * sizeof(ZUSIVERTEX));
 			m_vbuffer->Unlock();
 
-			if (FAILED(m_d3ddev->CreateIndexBuffer(
-				(*it)->faceIndices.size() * sizeof(UINT32),
-				0,
-				D3DFMT_INDEX32,
-				D3DPOOL_MANAGED,
-				&(m_ibuffer),
-				NULL))) return E_FAIL;
+			if (FAILED(hr = m_d3ddev->CreateIndexBuffer(
+				numFaceIndices * sizeof(UINT32),
+				0, D3DFMT_INDEX32, D3DPOOL_MANAGED, &m_ibuffer, NULL)))
+			{
+				return hr;
+			}
 
 			m_ibuffer->Lock(0, 0, (void**) &pData, 0);
-			memcpy(pData, (*it)->faceIndices.data(), (*it)->faceIndices.size() * sizeof(UINT32));
+			memcpy(pData, subset.faceIndices.data(), numFaceIndices * sizeof(UINT32));
 			m_ibuffer->Unlock();
 
 			if (FAILED(hr = m_d3ddev->SetIndices(m_ibuffer))) return hr;
 			if (FAILED(hr = m_d3ddev->SetStreamSource(0, m_vbuffer, 0, sizeof(ZUSIVERTEX)))) return hr;
-			if (FAILED(hr = m_d3ddev->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, (*it)->vertices.size(), 0, (*it)->faceIndices.size() / 3))) return hr;
+			if (FAILED(hr = m_d3ddev->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, numVertices, 0, numFaces))) return hr;
 		}
 
 		if (FAILED(m_d3ddev->EndScene())) return E_FAIL;
@@ -287,8 +204,6 @@ public:
 
 		this->ReadImageFromDirect3D(phBmpThumbnail);
 		this->CleanUpDirect3D();
-
-		// TODO delete subsets
 
 		DestroyWindow(hwnd);
 		return S_OK;
