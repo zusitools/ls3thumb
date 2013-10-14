@@ -78,7 +78,7 @@ public:
 	STDMETHOD(Extract)(HBITMAP* phBmpThumbnail)
 	{
 		std::unique_ptr<Ls3File> ls3File(
-			Ls3FileReader::readLs3File(m_szFileName));
+			Ls3FileReader::readLs3File(m_szFilename));
 
 		if (ls3File->subsets.size() == 0) {
 			return S_OK;
