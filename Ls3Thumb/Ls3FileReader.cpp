@@ -258,6 +258,38 @@ void Ls3FileReader::readSubSetNode(Ls3File &file, const bool useLsbFile,
 		int numFaceIndices = _wtoi(meshIAttribute->value());
 		
 		// Insert code to read vertex and face data from LSB file here
+
+		FLOAT vertexData[10];
+		DWORD numBytesRead;
+
+		for (int i = 0; i < numVertices; i++)
+		{
+			ReadFile(lsbFile, vertexData, sizeof(vertexData),
+				&numBytesRead, NULL);
+
+			subset.vertices.push_back(ZUSIVERTEX());
+			ZUSIVERTEX& vertex = subset.vertices.back();
+			ZeroMemory(&vertex, sizeof(ZUSIVERTEX));
+
+			vertex.pos.x = vertexData[0];
+			vertex.pos.y = vertexData[1];
+			vertex.pos.z = vertexData[2];
+			vertex.normal.x = vertexData[3];
+			vertex.normal.y = vertexData[4];
+			vertex.normal.z = vertexData[5];
+		}
+
+		UINT16 faceIndices[3];
+
+		for (int i = 0; i < numFaceIndices / 3; i++)
+		{
+			ReadFile(lsbFile, faceIndices, sizeof(faceIndices),
+				&numBytesRead, NULL);
+
+			subset.faceIndices.push_back(faceIndices[2]);
+			subset.faceIndices.push_back(faceIndices[1]);
+			subset.faceIndices.push_back(faceIndices[0]);
+		}
 	}
 
 	for (xml_node<wchar_t> *node = subsetNode.first_node(); node;
