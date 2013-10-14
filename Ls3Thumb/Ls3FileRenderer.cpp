@@ -9,9 +9,9 @@ HRESULT Ls3FileRenderer::RenderScene(Ls3File &file, SIZE &size, LPDIRECT3DDEVICE
 {
 	HRESULT hr;
 
-	D3DXVECTOR3 cameraPosition(5.0f, 5.0f, 5.0f);
+	D3DXVECTOR3 cameraPosition(-5.0f, -5.0f, 5.0f);
 	D3DXVECTOR3 cameraTarget(0.0f, 0.0f, 0.0f);
-	D3DXVECTOR3 cameraUp(0.0f, 1.0f, 0.0f);
+	D3DXVECTOR3 cameraUp(0.0f, 0.0f, 1.0f);
 	D3DXMATRIX viewMatrix;
 	D3DXMatrixLookAtLH(&viewMatrix, &cameraPosition, &cameraTarget, &cameraUp);
 
@@ -38,13 +38,13 @@ HRESULT Ls3FileRenderer::RenderScene(Ls3File &file, SIZE &size, LPDIRECT3DDEVICE
 	LPDIRECT3DINDEXBUFFER9 pIndexBuffer;
 
 	D3DLIGHT9 light;
-	ZeroMemory(&light, sizeof(light));    // clear out the light struct for use
-	light.Type = D3DLIGHT_DIRECTIONAL;    // make the light type 'directional light'
-	light.Diffuse = D3DXCOLOR(0.5f, 0.5f, 0.5f, 1.0f);    // set the light's color
-	light.Direction = D3DXVECTOR3(-1.0f, -0.3f, -1.0f);
+	ZeroMemory(&light, sizeof(light));
+	light.Type = D3DLIGHT_DIRECTIONAL;
+	light.Diffuse = D3DXCOLOR(0.8f, 0.8f, 0.8f, 1.0f);
+	light.Direction = D3DXVECTOR3(-5.0f, -5.0f, -5.0f);
 
-	d3ddev->SetLight(0, &light);    // send the light struct properties to light #0
-	d3ddev->LightEnable(0, TRUE);    // turn on light #0
+	d3ddev->SetLight(0, &light);
+	d3ddev->LightEnable(0, TRUE);
 
 	for (auto it = file.subsets.begin(); it != file.subsets.end(); it++)
 	{
