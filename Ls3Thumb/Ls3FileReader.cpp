@@ -1,11 +1,15 @@
 #include "stdafx.h"
 #include "Ls3FileReader.h"
 
-Ls3File* Ls3FileReader::readLs3File(const char *fileName)
+Ls3File* Ls3FileReader::readLs3File(LPCWSTR fileName)
 {
 	Ls3File *result = new Ls3File();
 
-	file<> xmlFile(fileName); // Default template is char
+	char fileNameChar[MAX_PATH];
+	size_t i;
+	wcstombs_s(&i, fileNameChar, MAX_PATH, fileName, MAX_PATH);
+
+	file<> xmlFile(fileNameChar); // Default template is char
 	xml_document<> doc;
 	doc.parse<0>(xmlFile.data());
 
@@ -13,6 +17,10 @@ Ls3File* Ls3FileReader::readLs3File(const char *fileName)
 	if (!rootNode) {
 		return result;
 	}
+
+	// Retrieve directory name from file name
+	lstrcpyn(result->dir, fileName, MAX_PATH);
+	PathRemoveFileSpec(result->dir);
 
 	readZusiNode(*result, *rootNode);
 	return result;
@@ -30,6 +38,28 @@ void Ls3FileReader::readZusiNode(Ls3File &file, xml_node<> &zusiNode)
 
 void Ls3FileReader::readLandschaftNode(Ls3File &file, xml_node<> &landschaftNode)
 {
+	bool useLsbFile = false;
+	HANDLE lsbFile;
+
+	xml_node<> *lsbNode = landschaftNode.first_node("lsb");
+	if (lsbNode)
+	{
+		xml_attribute<> *fileNameAttribute =
+			lsbNode->first_attribute("Dateiname");
+
+		// TODO this sucks
+		const char *fileName = fileNameAttribute->value();
+		WCHAR fileNameWide[MAX_PATH];
+		size_t i;
+		mbstowcs_s(&i, fileNameWide, MAX_PATH, fileName, MAX_PATH);
+
+		if (fileNameAttribute && GetFileByZusiPathSpec(fileNameWide, file.dir,
+			lsbFile))
+		{
+			useLsbFile = true;
+		}
+	}
+
 	for (xml_node<> *subsetNode = landschaftNode.first_node("SubSet");
 		subsetNode; subsetNode = subsetNode->next_sibling("SubSet"))
 	{
@@ -40,16 +70,34 @@ void Ls3FileReader::readLandschaftNode(Ls3File &file, xml_node<> &landschaftNode
 		subset.ambientColor = RGB(150, 150, 150); // TODO what is the default?
 		subset.diffuseColor = RGB(150, 150, 150); // TODO what is the default?
 
-		for (xml_node<> *node = subsetNode->first_node(); node;
-			node = node->next_sibling())
+		if (useLsbFile)
 		{
-			if (_stricmp(node->name(), "Vertex") == 0)
+			xml_attribute<> *meshVAttribute =
+				subsetNode->first_attribute("MeshV");
+			if (!meshVAttribute) continue;
+
+			xml_attribute<> *meshIAttribute =
+				subsetNode->first_attribute("MeshI");
+			if (!meshIAttribute) continue;
+
+			int numVertices = atoi(meshVAttribute->value());
+			int numFaceIndices = atoi(meshIAttribute->value());
+
+			// TODO read vertices and face indices from LSB file
+		}
+		else
+		{
+			for (xml_node<> *node = subsetNode->first_node(); node;
+				node = node->next_sibling())
 			{
-				readVertexNode(subset, *node);
-			}
-			else if (_stricmp(node->name(), "Face") == 0)
-			{
-				readFaceNode(subset, *node);
+				if (_stricmp(node->name(), "Vertex") == 0)
+				{
+					readVertexNode(subset, *node);
+				}
+				else if (_stricmp(node->name(), "Face") == 0)
+				{
+					readFaceNode(subset, *node);
+				}
 			}
 		}
 	}
@@ -123,4 +171,20 @@ void Ls3FileReader::read3DCoordinates(COORD3D &coords, xml_node<> &node)
 			coords.z = atof(attr->value());
 		}
 	}
+}
+
+bool Ls3FileReader::GetFileByZusiPathSpec(LPCWSTR fileName,
+	LPCWSTR parentFileDir, HANDLE &file)
+{
+	TCHAR sameDirName[MAX_PATH];
+	PathCombine(sameDirName, parentFileDir, fileName);
+
+	if (PathFileExists(sameDirName)) {
+		file = CreateFile(sameDirName, GENERIC_READ, FILE_SHARE_READ,
+			NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+		return true;
+	}
+
+	// TODO
+	return false;
 }

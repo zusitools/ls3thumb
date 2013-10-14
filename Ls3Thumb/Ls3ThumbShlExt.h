@@ -77,11 +77,8 @@ public:
 	// IExtractImage
 	STDMETHOD(Extract)(HBITMAP* phBmpThumbnail)
 	{
-		char fileName[MAX_PATH];
-		size_t i;
-		wcstombs_s(&i, fileName, MAX_PATH, m_szFilename, MAX_PATH);
-		
-		std::unique_ptr<Ls3File> ls3File(Ls3FileReader::readLs3File(fileName));
+		std::unique_ptr<Ls3File> ls3File(
+			Ls3FileReader::readLs3File(m_szFileName));
 
 		if (ls3File->subsets.size() == 0) {
 			return S_OK;

@@ -10,7 +10,7 @@ using namespace rapidxml;
 class Ls3FileReader
 {
 public:
-	static Ls3File* readLs3File(const char *fileName);
+	static Ls3File* readLs3File(LPCWSTR fileName);
 
 private:
 	static void readZusiNode(Ls3File &file, xml_node<> &zusiNode);
@@ -19,4 +19,6 @@ private:
 	static void readFaceNode(Ls3MeshSubset &subset, xml_node<> &vertexNode);
 
 	static void read3DCoordinates(COORD3D &coords, xml_node<> &node);
+	static bool GetFileByZusiPathSpec(LPCWSTR fileName,
+		LPCWSTR parentFileDir, HANDLE &file);
 };

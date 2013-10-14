@@ -52,4 +52,9 @@ struct Ls3File
 	 * The mesh subsets of this file.
 	 */
 	std::vector<Ls3MeshSubset> subsets;
+
+	/**
+	 * The directory this file lies in.
+	 */
+	WCHAR dir[MAX_PATH];
 };
