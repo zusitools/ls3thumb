@@ -1,8 +1,7 @@
 #include "stdafx.h"
 #include "Ls3FileRenderer.h"
 
-#define ZUSIFVF (D3DFVF_XYZ /* | D3DFVF_NORMAL | D3DFVF_DIFFUSE */ \
-	/* | D3DFVF_SPECULAR | D3DFVF_TEX1 */)
+#define ZUSIFVF (D3DFVF_XYZ | D3DFVF_NORMAL /* | D3DFVF_TEX1 */)
 
 #define TRY(action) if (FAILED(hr = action)) { return hr; }
 
@@ -116,11 +115,12 @@ HRESULT Ls3FileRenderer::RenderScene(Ls3File &file, SIZE &size)
 
 	TRY(m_d3ddev->SetTransform(D3DTS_PROJECTION, &projectionMatrix));
 
-	// Turn off the 3D lighting and turn on Z buffering
-	TRY(m_d3ddev->SetRenderState(D3DRS_LIGHTING, FALSE));
+	// Turn on 3D lighting and Z buffering
+	TRY(m_d3ddev->SetRenderState(D3DRS_LIGHTING, TRUE));
+	TRY(m_d3ddev->SetRenderState(D3DRS_AMBIENT, D3DCOLOR_XRGB(150, 150, 150)));
 	TRY(m_d3ddev->SetRenderState(D3DRS_ZENABLE, TRUE));
 
-	TRY(m_d3ddev->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(116, 165, 210), 1.0f, 0));
+	TRY(m_d3ddev->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(rand() % 255, 165, 210), 1.0f, 0));
 	TRY(m_d3ddev->Clear(0, NULL, D3DCLEAR_ZBUFFER, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0));
 	TRY(m_d3ddev->BeginScene());
 	TRY(m_d3ddev->SetFVF(ZUSIFVF));
@@ -128,6 +128,15 @@ HRESULT Ls3FileRenderer::RenderScene(Ls3File &file, SIZE &size)
 	VOID* pData;
 	LPDIRECT3DVERTEXBUFFER9 pVertexBuffer;
 	LPDIRECT3DINDEXBUFFER9 pIndexBuffer;
+
+	D3DLIGHT9 light;
+	ZeroMemory(&light, sizeof(light));    // clear out the light struct for use
+	light.Type = D3DLIGHT_DIRECTIONAL;    // make the light type 'directional light'
+	light.Diffuse = D3DXCOLOR(0.5f, 0.5f, 0.5f, 1.0f);    // set the light's color
+	light.Direction = D3DXVECTOR3(-1.0f, -0.3f, -1.0f);
+
+	m_d3ddev->SetLight(0, &light);    // send the light struct properties to light #0
+	m_d3ddev->LightEnable(0, TRUE);    // turn on light #0
 
 	for (auto it = file.subsets.begin(); it != file.subsets.end(); it++)
 	{
@@ -140,6 +149,7 @@ HRESULT Ls3FileRenderer::RenderScene(Ls3File &file, SIZE &size)
 			continue;
 		}
 
+		// Create vertex buffer
 		TRY(m_d3ddev->CreateVertexBuffer(
 			numVertices * sizeof(ZUSIVERTEX),
 			0, ZUSIFVF, D3DPOOL_MANAGED, &pVertexBuffer, NULL));
@@ -148,6 +158,7 @@ HRESULT Ls3FileRenderer::RenderScene(Ls3File &file, SIZE &size)
 		memcpy(pData, subset.vertices.data(), numVertices * sizeof(ZUSIVERTEX));
 		pVertexBuffer->Unlock();
 
+		// Create index buffer
 		TRY(m_d3ddev->CreateIndexBuffer(
 			numFaceIndices * sizeof(UINT32),
 			0, D3DFMT_INDEX32, D3DPOOL_MANAGED, &pIndexBuffer, NULL));
@@ -156,6 +167,22 @@ HRESULT Ls3FileRenderer::RenderScene(Ls3File &file, SIZE &size)
 		memcpy(pData, subset.faceIndices.data(), numFaceIndices * sizeof(UINT32));
 		pIndexBuffer->Unlock();
 
+		// Create and set the material
+		D3DMATERIAL9 material;
+		ZeroMemory(&material, sizeof(material));
+		material.Ambient.r = GetRValue(subset.ambientColor) / 255.0;
+		material.Ambient.g = GetGValue(subset.ambientColor) / 255.0;
+		material.Ambient.b = GetBValue(subset.ambientColor) / 255.0;
+		material.Ambient.a = 1.0;
+
+		material.Diffuse.r = GetRValue(subset.diffuseColor) / 255.0;
+		material.Diffuse.g = GetGValue(subset.diffuseColor) / 255.0;
+		material.Diffuse.b = GetBValue(subset.diffuseColor) / 255.0;
+		material.Diffuse.a = 1.0;
+
+		TRY(m_d3ddev->SetMaterial(&material));
+
+		// Draw the mesh
 		TRY(m_d3ddev->SetIndices(pIndexBuffer));
 		TRY(m_d3ddev->SetStreamSource(0, pVertexBuffer, 0, sizeof(ZUSIVERTEX)));
 		TRY(m_d3ddev->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, numVertices, 0, numFaces));

@@ -36,6 +36,10 @@ void Ls3FileReader::readLandschaftNode(Ls3File &file, xml_node<> &landschaftNode
 		file.subsets.push_back(Ls3MeshSubset());
 		Ls3MeshSubset &subset = file.subsets.back();
 
+		// Set default color values
+		subset.ambientColor = RGB(150, 150, 150); // TODO what is the default?
+		subset.diffuseColor = RGB(150, 150, 150); // TODO what is the default?
+
 		for (xml_node<> *node = subsetNode->first_node(); node;
 			node = node->next_sibling())
 		{
@@ -63,6 +67,10 @@ void Ls3FileReader::readVertexNode(Ls3MeshSubset &subset, xml_node<> &vertexNode
 		if (_stricmp(vertexChildNode->name(), "p") == 0)
 		{
 			read3DCoordinates(vertex.pos, *vertexChildNode);
+		}
+		else if (_stricmp(vertexChildNode->name(), "n") == 0)
+		{
+			read3DCoordinates(vertex.normal, *vertexChildNode);
 		}
 	}
 }

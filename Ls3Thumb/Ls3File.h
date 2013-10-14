@@ -9,9 +9,7 @@ struct COORD3D {
 
 struct ZUSIVERTEX {
 	COORD3D pos;
-	// FLOAT NX, NY, NZ;
-	// DWORD DIFFUSECOLOR;
-	// DWORD SPECULARCOLOR;
+	COORD3D normal;
 	// FLOAT U1, U2;
 };
 
@@ -29,6 +27,16 @@ struct Ls3MeshSubset
 	 * The vertex indices of the faces. Each 3 indices form a face.
 	 */
 	std::vector<UINT32> faceIndices;
+
+	/**
+	* The ambient color of this subset.
+	*/
+	COLORREF ambientColor;
+
+	/**
+	 * The diffuse color of this subset.
+	 */
+	COLORREF diffuseColor;
 
 	// TODO renderFlags
 	// TODO textures
