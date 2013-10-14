@@ -118,7 +118,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_USRDLL;D3D_DEBUG_INFO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>false</MinimalRebuild>
-      <AdditionalIncludeDirectories>C:\Program Files %28x86%29\Microsoft DirectX SDK %28June 2010%29\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -141,7 +141,7 @@
       <ModuleDefinitionFile>.\Ls3Thumb.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <RegisterOutput>true</RegisterOutput>
-      <AdditionalLibraryDirectories>C:\Program Files %28x86%29\Microsoft DirectX SDK %28June 2010%29\Lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(DXSDK_DIR)Lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -225,10 +225,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Ls3FileReader.cpp" />
-    <ClCompile Include="Ls3FileRenderer.cpp" />
     <ClCompile Include="Ls3Thumb.cpp" />
-    <ClCompile Include="Ls3ThumbnailRenderer.cpp" />
     <ClCompile Include="Ls3ThumbShlExt.cpp" />
     <ClCompile Include="Ls3Thumb_i.c">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
@@ -267,16 +264,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dllmain.h" />
-    <ClInclude Include="Ls3File.h" />
-    <ClInclude Include="Ls3FileReader.h" />
-    <ClInclude Include="Ls3FileRenderer.h" />
-    <ClInclude Include="Ls3ThumbnailRenderer.h" />
     <ClInclude Include="Ls3ThumbShlExt.h" />
     <ClInclude Include="Ls3Thumb_i.h" />
-    <ClInclude Include="rapidxml-1.13\rapidxml.hpp" />
-    <ClInclude Include="rapidxml-1.13\rapidxml_iterators.hpp" />
-    <ClInclude Include="rapidxml-1.13\rapidxml_print.hpp" />
-    <ClInclude Include="rapidxml-1.13\rapidxml_utils.hpp" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -295,6 +284,11 @@
   </ItemGroup>
   <ItemGroup>
     <Midl Include="Ls3Thumb.idl" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Ls3ThumbUtils\Ls3ThumbUtils.vcxproj">
+      <Project>{ed6be991-72e2-4e42-b86b-1bb45c42aa20}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
