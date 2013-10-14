@@ -228,6 +228,7 @@
     <ClCompile Include="Ls3FileReader.cpp" />
     <ClCompile Include="Ls3FileRenderer.cpp" />
     <ClCompile Include="Ls3Thumb.cpp" />
+    <ClCompile Include="Ls3ThumbnailRenderer.cpp" />
     <ClCompile Include="Ls3ThumbShlExt.cpp" />
     <ClCompile Include="Ls3Thumb_i.c">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
@@ -269,6 +270,7 @@
     <ClInclude Include="Ls3File.h" />
     <ClInclude Include="Ls3FileReader.h" />
     <ClInclude Include="Ls3FileRenderer.h" />
+    <ClInclude Include="Ls3ThumbnailRenderer.h" />
     <ClInclude Include="Ls3ThumbShlExt.h" />
     <ClInclude Include="Ls3Thumb_i.h" />
     <ClInclude Include="rapidxml-1.13\rapidxml.hpp" />

@@ -12,20 +12,5 @@
 class Ls3FileRenderer
 {
 public:
-	Ls3FileRenderer(HINSTANCE hInstance);
-	~Ls3FileRenderer();
-
-	HRESULT RenderLs3File(HBITMAP &resultBitmap, Ls3File &file, SIZE &size);
-
-private:
-	HRESULT CreateHiddenWindow(HWND &handle);
-	HRESULT InitDirect3D(HWND hWnd, SIZE &backBufferSize);
-	HRESULT RenderScene(Ls3File &file, SIZE &size);
-	void CleanUpDirect3D();
-	HRESULT ReadImageFromDirect3D(HBITMAP &phBmpBitmap);
-
-	HINSTANCE m_hInstance;
-
-	LPDIRECT3D9 m_d3d;
-	LPDIRECT3DDEVICE9 m_d3ddev;
+	static HRESULT RenderScene(Ls3File &file, SIZE &size, LPDIRECT3DDEVICE9 &d3ddev);
 };

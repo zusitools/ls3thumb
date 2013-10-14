@@ -11,7 +11,7 @@
 
 #include "Ls3File.h"
 #include "Ls3FileReader.h"
-#include "Ls3FileRenderer.h"
+#include "Ls3ThumbnailRenderer.h"
 
 #include "Ls3Thumb_i.h"
 
@@ -87,7 +87,7 @@ public:
 			return S_OK;
 		}
 
-		Ls3FileRenderer renderer(_AtlBaseModule.GetModuleInstance());
+		Ls3ThumbnailRenderer renderer(_AtlBaseModule.GetModuleInstance());
 		return renderer.RenderLs3File(*phBmpThumbnail, *ls3File, m_rgSize);
 	}
 
