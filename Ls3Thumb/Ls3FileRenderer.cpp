@@ -9,8 +9,31 @@ HRESULT Ls3FileRenderer::RenderScene(Ls3File &file, SIZE &size, LPDIRECT3DDEVICE
 {
 	HRESULT hr;
 
-	D3DXVECTOR3 cameraPosition(-5.0f, -5.0f, 5.0f);
-	D3DXVECTOR3 cameraTarget(0.0f, 0.0f, 0.0f);
+	BoundingBox boundingBox;
+	CalculateBoundingBox(file, boundingBox);
+
+	// FLOAT cameraZ = 2 * boundingBox.zmax;
+	FLOAT cameraZ = (boundingBox.zmin + boundingBox.zmax) / 2.0f;
+	FLOAT cameraAngle = D3DX_PI / 4;
+
+	double beta = 30.0 / 180.0 * D3DX_PI; // between 0 and 45 degrees
+	double m1 = tan(D3DX_PI / 2 - beta);
+	double m2 = tan(D3DX_PI / 2 - beta - cameraAngle);
+	double m3 = tan(D3DX_PI / 2 - beta - cameraAngle / 2);
+
+	double x1 = boundingBox.xmin * 1.1;
+	double y1 = boundingBox.ymax * 1.1;
+	double x2 = boundingBox.xmax * 1.1;
+	double y2 = boundingBox.ymin * 1.1;
+
+	double xcam = (-x2*m2 + y2 - y1 + x1*m1) / (m1 - m2);
+	double ycam = m1 * xcam - x1 * m1 + y1;
+
+	double xlookat = xcam + 3;
+	double ylookat = ycam + m3 * 3;
+
+	D3DXVECTOR3 cameraPosition(xcam, ycam, cameraZ);
+	D3DXVECTOR3 cameraTarget(xlookat, ylookat, cameraZ);
 	D3DXVECTOR3 cameraUp(0.0f, 0.0f, 1.0f);
 	D3DXMATRIX viewMatrix;
 	D3DXMatrixLookAtLH(&viewMatrix, &cameraPosition, &cameraTarget, &cameraUp);
@@ -19,7 +42,7 @@ HRESULT Ls3FileRenderer::RenderScene(Ls3File &file, SIZE &size, LPDIRECT3DDEVICE
 
 	// Setup the projection matrix
 	D3DXMATRIX projectionMatrix;
-	D3DXMatrixPerspectiveFovLH(&projectionMatrix, D3DX_PI / 4, (float) size.cx / (float) size.cy, 0.1f, 100.0f);
+	D3DXMatrixPerspectiveFovLH(&projectionMatrix, cameraAngle, (float) size.cx / (float) size.cy, 0.1f, 100.0f);
 
 	TRY(d3ddev->SetTransform(D3DTS_PROJECTION, &projectionMatrix));
 
@@ -100,4 +123,23 @@ HRESULT Ls3FileRenderer::RenderScene(Ls3File &file, SIZE &size, LPDIRECT3DDEVICE
 	TRY(d3ddev->Present(NULL, NULL, NULL, NULL));
 
 	return S_OK;
+}
+
+void Ls3FileRenderer::CalculateBoundingBox(const Ls3File &file,
+		BoundingBox &boundingBox) {
+	ZeroMemory(&boundingBox, sizeof(boundingBox));
+
+	for (auto sit = file.subsets.begin(); sit != file.subsets.end(); sit++)
+	{
+		for (auto vit = (*sit).vertices.begin(); vit != (*sit).vertices.end(); vit++)
+		{
+			COORD3D p = (*vit).pos;
+			if (p.x < boundingBox.xmin) boundingBox.xmin = p.x;
+			if (p.y < boundingBox.ymin) boundingBox.ymin = p.y;
+			if (p.z < boundingBox.zmin) boundingBox.zmin = p.z;
+			if (p.x > boundingBox.xmax) boundingBox.xmax = p.x;
+			if (p.y > boundingBox.ymax) boundingBox.ymax = p.y;
+			if (p.z > boundingBox.zmax) boundingBox.zmax = p.z;
+		}
+	}
 }
