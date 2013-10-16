@@ -11,7 +11,11 @@ Ls3File* Ls3FileReader::readLs3File(LPCWSTR fileName)
 
 	file<> xmlFile(fileNameChar); // Default template is char
 	xml_document<> doc;
-	doc.parse<0>(xmlFile.data());
+	try {
+		doc.parse<0>(xmlFile.data());
+	} catch (...) {
+		return result ;
+	}
 
 	xml_node<> *rootNode = doc.first_node("Zusi");
 	if (!rootNode) {
