@@ -71,8 +71,30 @@ void Ls3FileReader::readLandschaftNode(Ls3File &file, xml_node<> &landschaftNode
 		Ls3MeshSubset &subset = file.subsets.back();
 
 		// Set default color values
-		subset.ambientColor = RGB(150, 150, 150); // TODO what is the default?
-		subset.diffuseColor = RGB(150, 150, 150); // TODO what is the default?
+		subset.ambientColor = 0;
+		subset.diffuseColor = 0;
+
+		xml_attribute<> *diffuseAttribute = subsetNode->first_attribute("C");
+		if (diffuseAttribute)
+		{
+			long long colorVal = strtoll(diffuseAttribute->value(), (char**) NULL, 16);
+			subset.diffuseColor = RGB(colorVal & 0xFF, (colorVal >> 8) & 0xFF,
+				(colorVal >> 16) & 0xFF);
+			// TODO alpha
+		}
+
+		xml_attribute<> *ambientAttribute = subsetNode->first_attribute("CA");
+		if (ambientAttribute)
+		{
+			long long colorVal = strtoll(ambientAttribute->value(), (char**) NULL, 16);
+			subset.ambientColor = RGB(colorVal & 0xFF, (colorVal >> 8) & 0xFF,
+				(colorVal >> 16) & 0xFF);
+			// TODO alpha
+		}
+		else
+		{
+			subset.ambientColor = subset.diffuseColor;
+		}
 
 		if (useLsbFile)
 		{
