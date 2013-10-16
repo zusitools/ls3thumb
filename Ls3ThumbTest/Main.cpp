@@ -12,7 +12,7 @@
 #include "Ls3FileReader.h"
 #include "Ls3FileRenderer.h"
 
-#define SCREEN_WIDTH 800
+#define SCREEN_WIDTH 600
 #define SCREEN_HEIGHT 600
 
 LPDIRECT3D9 d3d;
