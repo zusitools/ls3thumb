@@ -1,16 +1,18 @@
 #pragma once
 
 #include "Ls3File.h"
+#include <memory>
 
 #include "rapidxml-1.13/rapidxml.hpp"
 #include "rapidxml-1.13/rapidxml_utils.hpp"
 
 using namespace rapidxml;
+using namespace std;
 
 class Ls3FileReader
 {
 public:
-	static Ls3File* readLs3File(LPCWSTR fileName);
+	static unique_ptr<Ls3File> readLs3File(LPCWSTR fileName);
 
 private:
 	static void readZusiNode(Ls3File &file, xml_node<> &zusiNode);

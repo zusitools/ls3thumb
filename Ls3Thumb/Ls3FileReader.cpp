@@ -1,9 +1,9 @@
 #include "stdafx.h"
 #include "Ls3FileReader.h"
 
-Ls3File* Ls3FileReader::readLs3File(LPCWSTR fileName)
+unique_ptr<Ls3File> Ls3FileReader::readLs3File(LPCWSTR fileName)
 {
-	Ls3File *result = new Ls3File();
+	unique_ptr<Ls3File> result(new Ls3File());
 
 	char fileNameChar[MAX_PATH];
 	size_t i;

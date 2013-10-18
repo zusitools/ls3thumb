@@ -69,9 +69,8 @@ HRESULT Ls3FileRenderer::RenderScene(Ls3File &file, SIZE &size, LPDIRECT3DDEVICE
 	d3ddev->SetLight(0, &light);
 	d3ddev->LightEnable(0, TRUE);
 
-	for (auto it = file.subsets.begin(); it != file.subsets.end(); it++)
+	for (auto &subset : file.subsets)
 	{
-		const Ls3MeshSubset subset = *it;
 		const size_t numVertices = subset.vertices.size();
 		const size_t numFaceIndices = subset.faceIndices.size();
 		const size_t numFaces = numFaceIndices / 3;
@@ -129,11 +128,11 @@ void Ls3FileRenderer::CalculateBoundingBox(const Ls3File &file,
 		BoundingBox &boundingBox) {
 	ZeroMemory(&boundingBox, sizeof(boundingBox));
 
-	for (auto sit = file.subsets.begin(); sit != file.subsets.end(); sit++)
+	for (auto &sit : file.subsets)
 	{
-		for (auto vit = (*sit).vertices.begin(); vit != (*sit).vertices.end(); vit++)
+		for (auto &vit : sit.vertices)
 		{
-			COORD3D p = (*vit).pos;
+			COORD3D p = vit.pos;
 			if (p.x < boundingBox.xmin) boundingBox.xmin = p.x;
 			if (p.y < boundingBox.ymin) boundingBox.ymin = p.y;
 			if (p.z < boundingBox.zmin) boundingBox.zmin = p.z;

@@ -53,8 +53,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
 	initD3D(hWnd);
 
 	MSG msg;
-	Ls3File *ls3File = (new Ls3FileReader())->readLs3File(
-		(LPCWSTR) L"Z:\\z\\wuerfel.ls3");
+	auto ls3File = Ls3FileReader::readLs3File(L"Z:\\z\\inforiese.ls3");
 	SIZE windowSize;
 	windowSize.cx = SCREEN_WIDTH;
 	windowSize.cy = SCREEN_HEIGHT;
@@ -75,7 +74,6 @@ int WINAPI WinMain(HINSTANCE hInstance,
 	}
 
 	cleanD3D();
-	delete ls3File;
 
 	return msg.wParam;
 }
