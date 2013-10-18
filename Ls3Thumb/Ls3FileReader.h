@@ -15,12 +15,15 @@ public:
 	static unique_ptr<Ls3File> readLs3File(LPCWSTR fileName);
 
 private:
-	static void readZusiNode(Ls3File &file, xml_node<> &zusiNode);
-	static void readLandschaftNode(Ls3File &file, xml_node<> &landschaftNode);
-	static void readVertexNode(Ls3MeshSubset &subset, xml_node<> &vertexNode);
-	static void readFaceNode(Ls3MeshSubset &subset, xml_node<> &vertexNode);
+	static void readZusiNode(Ls3File &file, xml_node<wchar_t> &zusiNode);
+	static void readLandschaftNode(Ls3File &file,
+		xml_node<wchar_t> &landschaftNode);
+	static void readVertexNode(Ls3MeshSubset &subset,
+		xml_node<wchar_t> &vertexNode);
+	static void readFaceNode(Ls3MeshSubset &subset,
+		xml_node<wchar_t> &vertexNode);
 
-	static void read3DCoordinates(COORD3D &coords, xml_node<> &node);
+	static void read3DCoordinates(COORD3D &coords, xml_node<wchar_t> &node);
 	static bool GetFileByZusiPathSpec(LPCWSTR fileName,
 		LPCWSTR parentFileDir, HANDLE &file);
 };

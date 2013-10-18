@@ -9,15 +9,15 @@ unique_ptr<Ls3File> Ls3FileReader::readLs3File(LPCWSTR fileName)
 	size_t i;
 	wcstombs_s(&i, fileNameChar, MAX_PATH, fileName, MAX_PATH);
 
-	file<> xmlFile(fileNameChar); // Default template is char
-	xml_document<> doc;
+	file<wchar_t> xmlFile(fileNameChar);
+	xml_document<wchar_t> doc;
 	try {
 		doc.parse<0>(xmlFile.data());
 	} catch (...) {
 		return result ;
 	}
 
-	xml_node<> *rootNode = doc.first_node("Zusi");
+	xml_node<wchar_t> *rootNode = doc.first_node(L"Zusi");
 	if (!rootNode) {
 		return result;
 	}
@@ -30,9 +30,9 @@ unique_ptr<Ls3File> Ls3FileReader::readLs3File(LPCWSTR fileName)
 	return result;
 }
 
-void Ls3FileReader::readZusiNode(Ls3File &file, xml_node<> &zusiNode)
+void Ls3FileReader::readZusiNode(Ls3File &file, xml_node<wchar_t> &zusiNode)
 {
-	xml_node<> *landschaftNode = zusiNode.first_node("Landschaft");
+	xml_node<wchar_t> *landschaftNode = zusiNode.first_node(L"Landschaft");
 	if (!landschaftNode) {
 		return;
 	}
@@ -40,32 +40,27 @@ void Ls3FileReader::readZusiNode(Ls3File &file, xml_node<> &zusiNode)
 	readLandschaftNode(file, *landschaftNode);
 }
 
-void Ls3FileReader::readLandschaftNode(Ls3File &file, xml_node<> &landschaftNode)
+void Ls3FileReader::readLandschaftNode(Ls3File &file,
+	xml_node<wchar_t> &landschaftNode)
 {
 	bool useLsbFile = false;
 	HANDLE lsbFile;
 
-	xml_node<> *lsbNode = landschaftNode.first_node("lsb");
+	xml_node<wchar_t> *lsbNode = landschaftNode.first_node(L"lsb");
 	if (lsbNode)
 	{
-		xml_attribute<> *fileNameAttribute =
-			lsbNode->first_attribute("Dateiname");
+		xml_attribute<wchar_t> *fileNameAttribute =
+			lsbNode->first_attribute(L"Dateiname");
 
-		// TODO this sucks
-		const char *fileName = fileNameAttribute->value();
-		WCHAR fileNameWide[MAX_PATH];
-		size_t i;
-		mbstowcs_s(&i, fileNameWide, MAX_PATH, fileName, MAX_PATH);
-
-		if (fileNameAttribute && GetFileByZusiPathSpec(fileNameWide, file.dir,
-			lsbFile))
+		if (fileNameAttribute && GetFileByZusiPathSpec(
+			fileNameAttribute->value(), file.dir, lsbFile))
 		{
 			useLsbFile = true;
 		}
 	}
 
-	for (xml_node<> *subsetNode = landschaftNode.first_node("SubSet");
-		subsetNode; subsetNode = subsetNode->next_sibling("SubSet"))
+	for (xml_node<wchar_t> *subsetNode = landschaftNode.first_node(L"SubSet");
+		subsetNode; subsetNode = subsetNode->next_sibling(L"SubSet"))
 	{
 		file.subsets.push_back(Ls3MeshSubset());
 		Ls3MeshSubset &subset = file.subsets.back();
@@ -74,19 +69,23 @@ void Ls3FileReader::readLandschaftNode(Ls3File &file, xml_node<> &landschaftNode
 		subset.ambientColor = 0;
 		subset.diffuseColor = 0;
 
-		xml_attribute<> *diffuseAttribute = subsetNode->first_attribute("C");
+		xml_attribute<wchar_t> *diffuseAttribute =
+			subsetNode->first_attribute(L"C");
 		if (diffuseAttribute)
 		{
-			long long colorVal = strtoll(diffuseAttribute->value(), (char**) NULL, 16);
+			long long colorVal =
+				wcstoll(diffuseAttribute->value(), (wchar_t**) NULL, 16);
 			subset.diffuseColor = RGB(colorVal & 0xFF, (colorVal >> 8) & 0xFF,
 				(colorVal >> 16) & 0xFF);
 			// TODO alpha
 		}
 
-		xml_attribute<> *ambientAttribute = subsetNode->first_attribute("CA");
+		xml_attribute<wchar_t> *ambientAttribute =
+			subsetNode->first_attribute(L"CA");
 		if (ambientAttribute)
 		{
-			long long colorVal = strtoll(ambientAttribute->value(), (char**) NULL, 16);
+			long long colorVal =
+				wcstoll(ambientAttribute->value(), (wchar_t**) NULL, 16);
 			subset.ambientColor = RGB(colorVal & 0xFF, (colorVal >> 8) & 0xFF,
 				(colorVal >> 16) & 0xFF);
 			// TODO alpha
@@ -98,29 +97,29 @@ void Ls3FileReader::readLandschaftNode(Ls3File &file, xml_node<> &landschaftNode
 
 		if (useLsbFile)
 		{
-			xml_attribute<> *meshVAttribute =
-				subsetNode->first_attribute("MeshV");
+			xml_attribute<wchar_t> *meshVAttribute =
+				subsetNode->first_attribute(L"MeshV");
 			if (!meshVAttribute) continue;
 
-			xml_attribute<> *meshIAttribute =
-				subsetNode->first_attribute("MeshI");
+			xml_attribute<wchar_t> *meshIAttribute =
+				subsetNode->first_attribute(L"MeshI");
 			if (!meshIAttribute) continue;
 
-			int numVertices = atoi(meshVAttribute->value());
-			int numFaceIndices = atoi(meshIAttribute->value());
+			int numVertices = _wtoi(meshVAttribute->value());
+			int numFaceIndices = _wtoi(meshIAttribute->value());
 
 			// TODO read vertices and face indices from LSB file
 		}
 		else
 		{
-			for (xml_node<> *node = subsetNode->first_node(); node;
+			for (xml_node<wchar_t> *node = subsetNode->first_node(); node;
 				node = node->next_sibling())
 			{
-				if (_stricmp(node->name(), "Vertex") == 0)
+				if (wcsicmp(node->name(), L"Vertex") == 0)
 				{
 					readVertexNode(subset, *node);
 				}
-				else if (_stricmp(node->name(), "Face") == 0)
+				else if (wcsicmp(node->name(), L"Face") == 0)
 				{
 					readFaceNode(subset, *node);
 				}
@@ -129,43 +128,45 @@ void Ls3FileReader::readLandschaftNode(Ls3File &file, xml_node<> &landschaftNode
 	}
 }
 
-void Ls3FileReader::readVertexNode(Ls3MeshSubset &subset, xml_node<> &vertexNode)
+void Ls3FileReader::readVertexNode(Ls3MeshSubset &subset,
+	xml_node<wchar_t> &vertexNode)
 {
 	subset.vertices.push_back(ZUSIVERTEX());
 	ZUSIVERTEX& vertex = subset.vertices.back();
 	ZeroMemory(&vertex, sizeof(ZUSIVERTEX));
 
-	for (xml_node<> *vertexChildNode = vertexNode.first_node();
+	for (xml_node<wchar_t> *vertexChildNode = vertexNode.first_node();
 		vertexChildNode; vertexChildNode = vertexChildNode->next_sibling())
 	{
-		if (_stricmp(vertexChildNode->name(), "p") == 0)
+		if (wcsicmp(vertexChildNode->name(), L"p") == 0)
 		{
 			read3DCoordinates(vertex.pos, *vertexChildNode);
 		}
-		else if (_stricmp(vertexChildNode->name(), "n") == 0)
+		else if (wcsicmp(vertexChildNode->name(), L"n") == 0)
 		{
 			read3DCoordinates(vertex.normal, *vertexChildNode);
 		}
 	}
 }
 
-void Ls3FileReader::readFaceNode(Ls3MeshSubset &subset, xml_node<> &faceNode)
+void Ls3FileReader::readFaceNode(Ls3MeshSubset &subset,
+	xml_node<wchar_t> &faceNode)
 {
 	// The face indices are stored as semicolon-separated values
 	// in the attribute "i"
-	xml_attribute<> *indexAttr = faceNode.first_attribute("i");
+	xml_attribute<wchar_t> *indexAttr = faceNode.first_attribute(L"i");
 	if (indexAttr)
 	{
 		UINT32 readIndices[3];
 		unsigned char curIndex = 0;
 
-		char *context = NULL;
-		char *token = strtok_s(indexAttr->value(), ";", &context);
+		wchar_t *context = NULL;
+		wchar_t *token = wcstok_s(indexAttr->value(), L";", &context);
 		while (curIndex < 3 && token != NULL)
 		{
-			readIndices[curIndex] = atoi(token);
+			readIndices[curIndex] = _wtoi(token);
 			curIndex++;
-			token = strtok_s(NULL, ";", &context);
+			token = wcstok_s(NULL, L";", &context);
 		}
 
 		if (curIndex == 3)
@@ -179,22 +180,22 @@ void Ls3FileReader::readFaceNode(Ls3MeshSubset &subset, xml_node<> &faceNode)
 }
 	
 
-void Ls3FileReader::read3DCoordinates(COORD3D &coords, xml_node<> &node)
+void Ls3FileReader::read3DCoordinates(COORD3D &coords, xml_node<wchar_t> &node)
 {
-	for (xml_attribute<> *attr = node.first_attribute();
+	for (xml_attribute<wchar_t> *attr = node.first_attribute();
 		attr; attr = attr->next_attribute())
 	{
-		if (_stricmp(attr->name(), "x") == 0)
+		if (wcsicmp(attr->name(), L"x") == 0)
 		{
-			coords.x = atof(attr->value());
+			coords.x = _wtof(attr->value());
 		}
-		else if (_stricmp(attr->name(), "y") == 0)
+		else if (wcsicmp(attr->name(), L"y") == 0)
 		{
-			coords.y = atof(attr->value());
+			coords.y = _wtof(attr->value());
 		}
-		else if (_stricmp(attr->name(), "z") == 0)
+		else if (wcsicmp(attr->name(), L"z") == 0)
 		{
-			coords.z = atof(attr->value());
+			coords.z = _wtof(attr->value());
 		}
 	}
 }
