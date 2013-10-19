@@ -52,10 +52,22 @@ void Ls3FileReader::readLandschaftNode(Ls3File &file,
 		xml_attribute<wchar_t> *fileNameAttribute =
 			lsbNode->first_attribute(L"Dateiname");
 
-		if (fileNameAttribute && GetFileByZusiPathSpec(
-			fileNameAttribute->value(), file.dir, lsbFile))
+		if (fileNameAttribute)
 		{
-			useLsbFile = true;
+			wstring lsbPath = GetAbsoluteFilePath(fileNameAttribute->value(),
+				file.dir);
+
+			if (!lsbPath.empty())
+			{
+				lsbFile = CreateFile(lsbPath.c_str(), GENERIC_READ,
+					FILE_SHARE_READ, NULL, OPEN_EXISTING,
+					FILE_ATTRIBUTE_NORMAL, NULL);
+
+				if (lsbFile != INVALID_HANDLE_VALUE)
+				{
+					useLsbFile = true;
+				}
+			}
 		}
 	}
 
@@ -125,6 +137,10 @@ void Ls3FileReader::readLandschaftNode(Ls3File &file,
 				}
 			}
 		}
+	}
+
+	if (useLsbFile) {
+		CloseHandle(lsbFile);
 	}
 }
 
@@ -200,18 +216,53 @@ void Ls3FileReader::read3DCoordinates(COORD3D &coords, xml_node<wchar_t> &node)
 	}
 }
 
-bool Ls3FileReader::GetFileByZusiPathSpec(LPCWSTR fileName,
-	LPCWSTR parentFileDir, HANDLE &file)
+wstring Ls3FileReader::GetAbsoluteFilePath(LPCWSTR fileName,
+	LPCWSTR parentFileDir)
 {
-	TCHAR sameDirName[MAX_PATH];
-	PathCombine(sameDirName, parentFileDir, fileName);
+	TCHAR result[MAX_PATH];
 
-	if (PathFileExists(sameDirName)) {
-		file = CreateFile(sameDirName, GENERIC_READ, FILE_SHARE_READ,
-			NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-		return true;
+	// Relative to parent file directory
+	PathCombine(result, parentFileDir, fileName);
+	if (PathFileExists(result)) {
+		return wstring(result);
 	}
 
-	// TODO
-	return false;
+	// Relative to Zusi data path
+	PathCombine(result, GetZusiDataPath().c_str(), fileName);
+	if (PathFileExists(result)) {
+		return wstring(result);
+	}
+
+	// Absolute path
+	if (PathFileExists(fileName)) {
+		return wstring(fileName);
+	}
+
+	return wstring();
+}
+
+wstring Ls3FileReader::GetZusiDataPath()
+{
+	LONG hr;
+	HKEY hZusiKey;
+
+	hr = RegOpenKeyEx(HKEY_CURRENT_USER, L"Software\\Zusi3", 0,
+		KEY_READ | KEY_WOW64_32KEY, &hZusiKey);
+
+	if (hr != ERROR_SUCCESS) {
+		return wstring();
+	}
+
+	TCHAR result[MAX_PATH] = L"";
+	DWORD dwType;
+	DWORD dwDataSize = sizeof(result);
+	
+	hr = RegQueryValueEx(hZusiKey, L"DatenDir", NULL, NULL, (LPBYTE) result, &dwDataSize);
+	if (hr != ERROR_SUCCESS)
+	{
+		hr = RegQueryValueEx(hZusiKey, L"DatenDirDemo", NULL, NULL, (LPBYTE) result, &dwDataSize);
+	}
+
+	RegCloseKey(hZusiKey);
+	return wstring(result);
 }

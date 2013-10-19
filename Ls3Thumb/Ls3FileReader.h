@@ -24,6 +24,7 @@ private:
 		xml_node<wchar_t> &vertexNode);
 
 	static void read3DCoordinates(COORD3D &coords, xml_node<wchar_t> &node);
-	static bool GetFileByZusiPathSpec(LPCWSTR fileName,
-		LPCWSTR parentFileDir, HANDLE &file);
+	static wstring GetAbsoluteFilePath(LPCWSTR fileName,
+		LPCWSTR parentFileDir);
+	static wstring GetZusiDataPath();
 };
