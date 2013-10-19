@@ -4,6 +4,12 @@
 
 #define TRY(action) if (FAILED(hr = action)) { return hr; }
 
+#define MSG_CREATEWINDOW_FAILED L"Creating hidden window failed, error code %d\r\n"
+#define MSG_INITD3D_FAILED L"Initializing Direct3D failed, error code %d\r\n"
+#define MSG_RENDERSCENE_FAILED L"Rendering scene failed, error code %d\r\n"
+#define MSG_READIMAGE_FAILED L"Retrieving image from Direct3D failed, error code %d\r\n"
+#define MSG_OK L"Everything went all right.\r\n"
+
 
 Ls3ThumbnailRenderer::Ls3ThumbnailRenderer(HINSTANCE hInstance)
 	: m_hInstance(hInstance)
@@ -18,42 +24,54 @@ Ls3ThumbnailRenderer::~Ls3ThumbnailRenderer()
 
 HRESULT Ls3ThumbnailRenderer::RenderLs3File(HBITMAP &resultBitmap, Ls3File &file, SIZE &size)
 {
+	wchar_t debug_buf[2048];
 	HRESULT hr;
-
 	HWND windowHandle = 0;
-	TRY(this->CreateHiddenWindow(windowHandle));
-	TRY(this->InitDirect3D(windowHandle, size));
-	TRY((new Ls3FileRenderer())->RenderScene(file, size, this->m_d3ddev));
-	TRY(this->ReadImageFromDirect3D(resultBitmap));
 
-	this->CleanUpDirect3D();
-	DestroyWindow(windowHandle);
+	if (FAILED(hr = this->CreateHiddenWindow(windowHandle)))
+	{
+		wsprintf(debug_buf, MSG_CREATEWINDOW_FAILED, GetLastError());
+		OutputDebugString(debug_buf);
+	}
+	else
+	{
+		if FAILED(hr = this->InitDirect3D(windowHandle, size))
+		{
+			wsprintf(debug_buf, MSG_INITD3D_FAILED, hr);
+			OutputDebugString(debug_buf);
+		}
+		else
+		{
+			if (FAILED(hr = (new Ls3FileRenderer())->RenderScene(
+				file, size, this->m_d3ddev)))
+			{
+				wsprintf(debug_buf, MSG_RENDERSCENE_FAILED, hr);
+				OutputDebugString(debug_buf);
+			}
+			else
+			{
+				if (FAILED(hr = this->ReadImageFromDirect3D(resultBitmap)))
+				{
+					wsprintf(debug_buf, MSG_READIMAGE_FAILED, hr);
+					OutputDebugString(debug_buf);
+				}
+				else
+				{
+					OutputDebugString(MSG_OK);
+				}
+			}
 
-	return S_OK;
+			this->CleanUpDirect3D();
+		}
+
+		DestroyWindow(windowHandle);
+	}
+
+	return hr;
 }
 
 HRESULT Ls3ThumbnailRenderer::CreateHiddenWindow(HWND &handle)
 {
-	HRESULT hr;
-
-	// Create a window class for our hidden window
-	WNDCLASSEX wc;
-	wc.hInstance = m_hInstance;
-	wc.lpszClassName = (LPCWSTR) L"Ls3ThumbShlExtHiddenWindow";
-	wc.lpfnWndProc = DefWindowProc;
-	wc.style = 0;
-	wc.cbSize = sizeof (WNDCLASSEX);
-	wc.hIcon = NULL;
-	wc.hIconSm = NULL;
-	wc.hCursor = NULL;
-	wc.lpszMenuName = NULL;
-	wc.cbClsExtra = 0;
-	wc.cbWndExtra = 0;
-	wc.hbrBackground = NULL;
-
-	TRY(RegisterClassEx(&wc));
-
-	// Create the window itself
 	handle = CreateWindowEx(0,
 		(LPCWSTR) L"Ls3ThumbShlExtHiddenWindow",
 		(LPCWSTR) L"Hidden Window",
@@ -68,6 +86,7 @@ HRESULT Ls3ThumbnailRenderer::CreateHiddenWindow(HWND &handle)
 
 	if (handle == NULL)
 	{
+		DWORD lastError = GetLastError();
 		return E_FAIL;
 	}
 

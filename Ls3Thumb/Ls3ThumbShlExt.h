@@ -69,6 +69,10 @@ public:
 
 	STDMETHOD(Load)(LPCOLESTR wszFile, DWORD /*dwMode*/)
 	{
+		wchar_t debug_buf[2048];
+		wsprintf(debug_buf, L"Load() called for file %s\r\n", wszFile);
+		OutputDebugString(debug_buf);
+
 		USES_CONVERSION;
 		lstrcpyn(m_szFilename, OLE2CT(wszFile), MAX_PATH);
 		return S_OK;
@@ -77,9 +81,15 @@ public:
 	// IExtractImage
 	STDMETHOD(Extract)(HBITMAP* phBmpThumbnail)
 	{
+		wchar_t debug_buf[2048];
+		wsprintf(debug_buf, L"Extract() called for file %s\r\n", m_szFilename);
+		OutputDebugString(debug_buf);
+
 		auto ls3File = Ls3FileReader::readLs3File(m_szFilename);
 
 		if (ls3File->subsets.size() == 0) {
+			wsprintf(debug_buf, L"File %s is empty, doing nothing\r\n", m_szFilename);
+			OutputDebugString(debug_buf);
 			return S_OK;
 		}
 
