@@ -288,9 +288,9 @@ void Ls3FileReader::readSubSetNode(Ls3File &file, const bool useLsbFile,
 			ReadFile(lsbFile, faceIndices, sizeof(faceIndices),
 				&numBytesRead, NULL);
 
-			subset.faceIndices.push_back(faceIndices[2]);
-			subset.faceIndices.push_back(faceIndices[1]);
 			subset.faceIndices.push_back(faceIndices[0]);
+			subset.faceIndices.push_back(faceIndices[1]);
+			subset.faceIndices.push_back(faceIndices[2]);
 		}
 	}
 
