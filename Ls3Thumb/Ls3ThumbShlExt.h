@@ -90,11 +90,16 @@ public:
 		if (ls3File->subsets.size() == 0) {
 			wsprintf(debug_buf, L"File %s is empty, doing nothing\r\n", m_szFilename);
 			OutputDebugString(debug_buf);
-			return S_OK;
+			return E_NOTIMPL;
 		}
 
 		Ls3ThumbnailRenderer renderer(_AtlBaseModule.GetModuleInstance());
-		return renderer.RenderLs3File(*phBmpThumbnail, *ls3File, m_rgSize);
+		if (FAILED(renderer.RenderLs3File(*phBmpThumbnail, *ls3File, m_rgSize))) {
+			return E_NOTIMPL;
+		}
+		else {
+			return S_OK;
+		}
 	}
 
 	STDMETHOD(GetLocation)(LPWSTR pszPathBuffer, DWORD cchMax, DWORD *pdwPriority, const SIZE *prgSize, DWORD dwRecClrDepth, DWORD *pdwFlags)
