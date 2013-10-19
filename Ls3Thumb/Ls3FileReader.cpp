@@ -9,25 +9,27 @@ unique_ptr<Ls3File> Ls3FileReader::readLs3File(LPCWSTR fileName)
 	size_t i;
 	wcstombs_s(&i, fileNameChar, MAX_PATH, fileName, MAX_PATH);
 
-	file<wchar_t> xmlFile(fileNameChar);
 	xml_document<wchar_t> doc;
-	try {
-		doc.parse<0>(xmlFile.data());
-	} catch (...) {
-		return result ;
-	}
 
-	xml_node<wchar_t> *rootNode = doc.first_node(L"Zusi");
-	if (!rootNode) {
+	try {
+		file<wchar_t> xmlFile(fileNameChar);
+		doc.parse<0>(xmlFile.data());
+	
+		xml_node<wchar_t> *rootNode = doc.first_node(L"Zusi");
+		if (!rootNode) {
+			return result;
+		}
+
+		// Retrieve directory name from file name
+		lstrcpyn(result->dir, fileName, MAX_PATH);
+		PathRemoveFileSpec(result->dir);
+
+		readZusiNode(*result, *rootNode);
 		return result;
 	}
-
-	// Retrieve directory name from file name
-	lstrcpyn(result->dir, fileName, MAX_PATH);
-	PathRemoveFileSpec(result->dir);
-
-	readZusiNode(*result, *rootNode);
-	return result;
+	catch (...) {
+		return result;
+	}
 }
 
 void Ls3FileReader::readZusiNode(Ls3File &file, xml_node<wchar_t> &zusiNode)
