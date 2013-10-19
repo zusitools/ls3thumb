@@ -5,6 +5,12 @@
 
 #define TRY(action) if (FAILED(hr = action)) { return hr; }
 
+#define LINE_INTERSECT_X(x1, y1, m1, x2, y2, m2) ((-x2*m2 + y2 - y1 + x1*m1) / (m1 - m2))
+#define LINE_INTERSECT_Y(x1, y1, m1, xintersect) (m1 * (xintersect - x1) + y1)
+
+#define FOV_Y (D3DX_PI / 4)
+#define CAMERA_ANGLE_DEGREES 40.0f
+
 HRESULT Ls3FileRenderer::RenderScene(Ls3File &file, SIZE &size, LPDIRECT3DDEVICE9 &d3ddev)
 {
 	HRESULT hr;
@@ -12,37 +18,60 @@ HRESULT Ls3FileRenderer::RenderScene(Ls3File &file, SIZE &size, LPDIRECT3DDEVICE
 	BoundingBox boundingBox;
 	CalculateBoundingBox(file, boundingBox);
 
-	// FLOAT cameraZ = 2 * boundingBox.zmax;
+	FLOAT aspectRatio = (float) size.cx / (float) size.cy;
 	FLOAT cameraZ = (boundingBox.zmin + boundingBox.zmax) / 2.0f;
-	FLOAT cameraAngle = D3DX_PI / 4;
+	FLOAT fovX = aspectRatio * FOV_Y;
 
-	double beta = 30.0 / 180.0 * D3DX_PI; // between 0 and 45 degrees
-	double m1 = tan(D3DX_PI / 2 - beta);
-	double m2 = tan(D3DX_PI / 2 - beta - cameraAngle);
-	double m3 = tan(D3DX_PI / 2 - beta - cameraAngle / 2);
+	FLOAT cameraAngle = CAMERA_ANGLE_DEGREES / 180.0 * D3DX_PI;
 
-	double x1 = boundingBox.xmin * 1.1;
-	double y1 = boundingBox.ymax * 1.1;
-	double x2 = boundingBox.xmax * 1.1;
-	double y2 = boundingBox.ymin * 1.1;
+	// Flip Y coordinates to convert coordinate system to the one
+	// normally used in geometry
+	double x1 = boundingBox.ymin;
+	double y1 = -boundingBox.xmin;
+	double x2 = boundingBox.ymax;
+	double y2 = -boundingBox.xmax;	
 
-	double xcam = (-x2*m2 + y2 - y1 + x1*m1) / (m1 - m2);
-	double ycam = m1 * xcam - x1 * m1 + y1;
+	// Retrieve point at which the upper-left and lower-right point of the
+	// bounding box (as seen from above) are visible.
+	double m1 = tan(cameraAngle + FOV_Y / 2);
+	double m2 = tan(cameraAngle - FOV_Y / 2);
+	double xp1 = LINE_INTERSECT_X(x1, y1, m1, x2, y2, m2);
+	double yp1 = LINE_INTERSECT_Y(x1, y1, m1, xp1);
 
-	double xlookat = xcam + 3;
-	double ylookat = ycam + m3 * 3;
+	// Retrieve point at which the two lower-left points of the bounding box
+	// (as seen from above) are visible.
+	double m3 = tan(cameraAngle);
+	double xlookat = LINE_INTERSECT_X(xp1, yp1, m3, x1, y2, -1 / m3);
+	double ylookat = LINE_INTERSECT_Y(xp1, yp1, m3, xlookat);
 
-	D3DXVECTOR3 cameraPosition(xcam, ycam, cameraZ);
-	D3DXVECTOR3 cameraTarget(xlookat, ylookat, cameraZ);
+	double minDist = (boundingBox.zmax - cameraZ) / tan(fovX / 2);
+	double xp2 = xlookat - cos(cameraAngle) * minDist;
+	double yp2 = ylookat - sin(cameraAngle) * minDist;
+
+	double dist1 = sqrt((xp1 - xlookat) * (xp1 - xlookat) + (yp1 - ylookat) * (yp1 - ylookat));
+	double xcam, ycam;
+
+	if (dist1 >= minDist) {
+		xcam = xp1;
+		ycam = yp1;
+	}
+	else
+	{
+		xcam = xp2;
+		ycam = yp2;
+	}
+
+	D3DXVECTOR3 cameraPosition(-ycam, xcam, cameraZ);
+	D3DXVECTOR3 cameraTarget(-ylookat, xlookat, cameraZ);
 	D3DXVECTOR3 cameraUp(0.0f, 0.0f, 1.0f);
 	D3DXMATRIX viewMatrix;
-	D3DXMatrixLookAtLH(&viewMatrix, &cameraPosition, &cameraTarget, &cameraUp);
+	D3DXMatrixLookAtRH(&viewMatrix, &cameraPosition, &cameraTarget, &cameraUp);
 
 	TRY(d3ddev->SetTransform(D3DTS_VIEW, &viewMatrix));
 
 	// Setup the projection matrix
 	D3DXMATRIX projectionMatrix;
-	D3DXMatrixPerspectiveFovLH(&projectionMatrix, cameraAngle, (float) size.cx / (float) size.cy, 0.1f, 100.0f);
+	D3DXMatrixPerspectiveFovRH(&projectionMatrix, FOV_Y, aspectRatio, 0.1f, 100.0f);
 
 	TRY(d3ddev->SetTransform(D3DTS_PROJECTION, &projectionMatrix));
 

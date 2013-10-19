@@ -190,8 +190,7 @@ void Ls3FileReader::readFaceNode(Ls3MeshSubset &subset,
 		if (curIndex == 3)
 		{
 			for (int i = 0; i < 3; i++) {
-				// We seem to have to reverse the direction of the indices.
-				subset.faceIndices.push_back(readIndices[2 - i]);
+				subset.faceIndices.push_back(readIndices[i]);
 			}
 		}
 	}
