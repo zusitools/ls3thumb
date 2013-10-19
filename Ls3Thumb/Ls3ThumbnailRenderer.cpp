@@ -54,7 +54,7 @@ HRESULT Ls3ThumbnailRenderer::CreateHiddenWindow(HWND &handle)
 	TRY(RegisterClassEx(&wc));
 
 	// Create the window itself
-	HWND hwnd = CreateWindowEx(0,
+	handle = CreateWindowEx(0,
 		(LPCWSTR) L"Ls3ThumbShlExtHiddenWindow",
 		(LPCWSTR) L"Hidden Window",
 		0,
@@ -66,7 +66,7 @@ HRESULT Ls3ThumbnailRenderer::CreateHiddenWindow(HWND &handle)
 		m_hInstance,
 		NULL);
 
-	if (hwnd == NULL)
+	if (handle == NULL)
 	{
 		return E_FAIL;
 	}
