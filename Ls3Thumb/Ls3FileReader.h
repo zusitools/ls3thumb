@@ -22,6 +22,8 @@ private:
 		xml_node<wchar_t> &vertexNode);
 	static void readFaceNode(Ls3MeshSubset &subset,
 		xml_node<wchar_t> &vertexNode);
+	static void readTexturNode(Ls3MeshSubset &subset, Ls3File &file,
+		xml_node<wchar_t> &texturNode);
 
 	static void read3DCoordinates(COORD3D &coords, xml_node<wchar_t> &node);
 	static wstring GetAbsoluteFilePath(LPCWSTR fileName,

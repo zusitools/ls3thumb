@@ -122,19 +122,21 @@ void Ls3FileReader::readLandschaftNode(Ls3File &file,
 
 			// TODO read vertices and face indices from LSB file
 		}
-		else
+
+		for (xml_node<wchar_t> *node = subsetNode->first_node(); node;
+			node = node->next_sibling())
 		{
-			for (xml_node<wchar_t> *node = subsetNode->first_node(); node;
-				node = node->next_sibling())
+			if (wcsicmp(node->name(), L"Vertex") == 0)
 			{
-				if (wcsicmp(node->name(), L"Vertex") == 0)
-				{
-					readVertexNode(subset, *node);
-				}
-				else if (wcsicmp(node->name(), L"Face") == 0)
-				{
-					readFaceNode(subset, *node);
-				}
+				readVertexNode(subset, *node);
+			}
+			else if (wcsicmp(node->name(), L"Face") == 0)
+			{
+				readFaceNode(subset, *node);
+			}
+			else if (wcsicmp(node->name(), L"Textur") == 0)
+			{
+				readTexturNode(subset, file, *node);
 			}
 		}
 	}
@@ -190,6 +192,24 @@ void Ls3FileReader::readFaceNode(Ls3MeshSubset &subset,
 			for (int i = 0; i < 3; i++) {
 				// We seem to have to reverse the direction of the indices.
 				subset.faceIndices.push_back(readIndices[2 - i]);
+			}
+		}
+	}
+}
+
+
+void Ls3FileReader::readTexturNode(Ls3MeshSubset &subset, Ls3File &file,
+	xml_node<wchar_t> &texturNode)
+{
+	xml_node<wchar_t> *dateiNode = texturNode.first_node(L"Datei");
+	if (dateiNode) {
+		xml_attribute<wchar_t> *dateinameAttribute = 
+			dateiNode->first_attribute(L"Dateiname");
+		if (dateinameAttribute) {
+			wstring fileName = GetAbsoluteFilePath(dateinameAttribute->value(),
+				file.dir);
+			if (!fileName.empty()) {
+				subset.textureFilenames.push_back(fileName);
 			}
 		}
 	}

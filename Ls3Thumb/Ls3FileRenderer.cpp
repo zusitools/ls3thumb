@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "Ls3FileRenderer.h"
 
-#define ZUSIFVF (D3DFVF_XYZ | D3DFVF_NORMAL /* | D3DFVF_TEX1 */)
+#define ZUSIFVF (D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_TEX1)
 
 #define TRY(action) if (FAILED(hr = action)) { return hr; }
 
@@ -51,7 +51,7 @@ HRESULT Ls3FileRenderer::RenderScene(Ls3File &file, SIZE &size, LPDIRECT3DDEVICE
 	TRY(d3ddev->SetRenderState(D3DRS_AMBIENT, D3DCOLOR_XRGB(150, 150, 150)));
 	TRY(d3ddev->SetRenderState(D3DRS_ZENABLE, TRUE));
 
-	TRY(d3ddev->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(rand() % 255, 165, 210), 1.0f, 0));
+	TRY(d3ddev->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(116, 165, 210), 1.0f, 0));
 	TRY(d3ddev->Clear(0, NULL, D3DCLEAR_ZBUFFER, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0));
 	TRY(d3ddev->BeginScene());
 	TRY(d3ddev->SetFVF(ZUSIFVF));
@@ -59,6 +59,7 @@ HRESULT Ls3FileRenderer::RenderScene(Ls3File &file, SIZE &size, LPDIRECT3DDEVICE
 	VOID* pData;
 	LPDIRECT3DVERTEXBUFFER9 pVertexBuffer;
 	LPDIRECT3DINDEXBUFFER9 pIndexBuffer;
+	LPDIRECT3DTEXTURE9 pTexture;
 
 	D3DLIGHT9 light;
 	ZeroMemory(&light, sizeof(light));
@@ -112,10 +113,26 @@ HRESULT Ls3FileRenderer::RenderScene(Ls3File &file, SIZE &size, LPDIRECT3DDEVICE
 
 		TRY(d3ddev->SetMaterial(&material));
 
+		// Load and set the texture
+		if (subset.textureFilenames.size() > 0)
+		{
+			D3DXCreateTextureFromFile(d3ddev,
+				subset.textureFilenames[0].c_str(), &pTexture);
+		}
+		else {
+			pTexture = NULL;
+		}
+
+		d3ddev->SetTexture(0, pTexture);
+
 		// Draw the mesh
 		TRY(d3ddev->SetIndices(pIndexBuffer));
 		TRY(d3ddev->SetStreamSource(0, pVertexBuffer, 0, sizeof(ZUSIVERTEX)));
 		TRY(d3ddev->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, numVertices, 0, numFaces));
+
+		if (pTexture != NULL) {
+			pTexture->Release();
+		}
 	}
 
 	TRY(d3ddev->EndScene());

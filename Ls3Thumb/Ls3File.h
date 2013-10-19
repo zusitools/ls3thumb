@@ -3,14 +3,20 @@
 #include "minwindef.h"
 #include <vector>
 
+using namespace std;
+
 struct COORD3D {
 	FLOAT x, y, z;
+};
+
+struct COORD2D {
+	FLOAT u, v;
 };
 
 struct ZUSIVERTEX {
 	COORD3D pos;
 	COORD3D normal;
-	// FLOAT U1, U2;
+	COORD2D tex1;
 };
 
 /**
@@ -21,12 +27,12 @@ struct Ls3MeshSubset
 	/**
 	 * The vertices of this subset.
 	 */
-	std::vector<ZUSIVERTEX> vertices;
+	vector<ZUSIVERTEX> vertices;
 
 	/**
 	 * The vertex indices of the faces. Each 3 indices form a face.
 	 */
-	std::vector<UINT32> faceIndices;
+	vector<UINT32> faceIndices;
 
 	/**
 	* The ambient color of this subset.
@@ -38,8 +44,12 @@ struct Ls3MeshSubset
 	 */
 	COLORREF diffuseColor;
 
+	/**
+	 * The file names of the textures used in this subset.
+	 */
+	vector<wstring> textureFilenames;
+
 	// TODO renderFlags
-	// TODO textures
 };
 
 /**
