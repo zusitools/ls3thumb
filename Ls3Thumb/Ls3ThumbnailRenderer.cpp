@@ -176,6 +176,10 @@ HRESULT Ls3ThumbnailRenderer::ReadImageFromDirect3D(HBITMAP &phBmpBitmap)
 			HBITMAP hBmpThumbnail = CreateDIBSection(tmpDC, &bmInfo,
 				DIB_RGB_COLORS, (void**) &pPixels, 0, 0);
 
+			if (hBmpThumbnail == NULL) {
+				return E_FAIL;
+			}
+
 			// Pointer to data is lt.pBits, each row is
 			// lr.Pitch bytes apart (often it is the same as width*bpp, but
 			// can be larger if driver uses padding)

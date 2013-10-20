@@ -49,7 +49,7 @@ void Ls3FileReader::readLandschaftNode(Ls3File &file,
 	xml_node<wchar_t> &landschaftNode)
 {
 	bool useLsbFile = false;
-	HANDLE lsbFile;
+	HANDLE lsbFile = INVALID_HANDLE_VALUE;
 
 	xml_node<wchar_t> *lsbNode = landschaftNode.first_node(L"lsb");
 	if (lsbNode)
@@ -344,12 +344,12 @@ wstring Ls3FileReader::GetZusiDataPath()
 	}
 
 	TCHAR result[MAX_PATH] = L"";
-	DWORD dwType;
 	DWORD dwDataSize = sizeof(result);
 	
 	hr = RegQueryValueEx(hZusiKey, L"DatenDir", NULL, NULL, (LPBYTE) result, &dwDataSize);
 	if (hr != ERROR_SUCCESS)
 	{
+		dwDataSize = sizeof(result);
 		hr = RegQueryValueEx(hZusiKey, L"DatenDirDemo", NULL, NULL, (LPBYTE) result, &dwDataSize);
 	}
 
