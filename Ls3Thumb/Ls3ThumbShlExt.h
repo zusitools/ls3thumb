@@ -90,7 +90,8 @@ public:
 		auto ls3File = Ls3FileReader::readLs3File(m_szFilename, 0x04);
 
 		if (ls3File->subsets.size() == 0) {
-			wsprintf(debug_buf, L"File %s is empty, doing nothing\r\n", m_szFilename);
+			wsprintf(debug_buf, L"File %s is empty, doing nothing\r\n",
+				m_szFilename);
 			OutputDebugString(debug_buf);
 			return E_NOTIMPL;
 		}
