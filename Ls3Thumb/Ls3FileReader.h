@@ -12,16 +12,18 @@ using namespace std;
 class Ls3FileReader
 {
 public:
-	static unique_ptr<Ls3File> readLs3File(LPCWSTR fileName);
+	static unique_ptr<Ls3File> readLs3File(LPCWSTR fileName,
+		const unsigned char lodMask = 0xF);
 
 private:
-	static void readZusiNode(Ls3File &file, xml_node<wchar_t> &zusiNode);
+	static void readZusiNode(Ls3File &file, xml_node<wchar_t> &zusiNode,
+		const unsigned char lodMask);
 	static void readLandschaftNode(Ls3File &file,
-		xml_node<wchar_t> &landschaftNode);
+		xml_node<wchar_t> &landschaftNode, const unsigned char lodMask);
 	static void readSubSetNode(Ls3File &file, bool useLsbFile, HANDLE lsbFile,
 		xml_node<wchar_t> &subsetNode);
 	static void readVerknuepfteNode(Ls3File &file,
-		xml_node<wchar_t> &verknuepfteNode);
+		xml_node<wchar_t> &verknuepfteNode, const unsigned char lodMask);
 	static void readVertexNode(Ls3MeshSubset &subset,
 		xml_node<wchar_t> &vertexNode);
 	static void readFaceNode(Ls3MeshSubset &subset,

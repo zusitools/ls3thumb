@@ -11,6 +11,7 @@
 
 #include "Ls3File.h"
 #include "Ls3FileReader.h"
+#include "Ls3FileUtils.h"
 #include "Ls3ThumbnailRenderer.h"
 
 #include "Ls3Thumb_i.h"
@@ -85,7 +86,8 @@ public:
 		wsprintf(debug_buf, L"Extract() called for file %s\r\n", m_szFilename);
 		OutputDebugString(debug_buf);
 
-		auto ls3File = Ls3FileReader::readLs3File(m_szFilename);
+		// Only show subsets visible in LOD1 when linked files are displayed.
+		auto ls3File = Ls3FileReader::readLs3File(m_szFilename, 0x04);
 
 		if (ls3File->subsets.size() == 0) {
 			wsprintf(debug_buf, L"File %s is empty, doing nothing\r\n", m_szFilename);

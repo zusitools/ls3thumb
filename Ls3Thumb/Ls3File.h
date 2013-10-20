@@ -1,6 +1,6 @@
 #pragma once
 
-#include "minwindef.h"
+#include "windows.h"
 #include <vector>
 
 using namespace std;
@@ -88,6 +88,13 @@ struct Ls3MeshSubset
 	 * The render flags of this mesh subset.
 	 */
 	Ls3RenderFlags renderFlags;
+
+	/**
+	 * The mask which specifies in which LOD levels this subset should be
+	 * visible. Only the lower four bits are used, and (lodMask << i) set
+	 * means that the subset is visible in LOD 3-i (for i in 0..3).
+	 */
+	BYTE lodMask;
 };
 
 /**

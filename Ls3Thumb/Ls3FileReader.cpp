@@ -4,7 +4,8 @@
 #define LONG_LONG_TO_COLOR(colorVal) { colorVal & 0xFF, \
 	(colorVal >> 8) & 0xFF, (colorVal >> 16) & 0xFF, (colorVal >> 24) & 0xFF }
 
-unique_ptr<Ls3File> Ls3FileReader::readLs3File(LPCWSTR fileName)
+unique_ptr<Ls3File> Ls3FileReader::readLs3File(LPCWSTR fileName,
+	const unsigned char lodMask)
 {
 	unique_ptr<Ls3File> result(new Ls3File());
 
@@ -27,7 +28,7 @@ unique_ptr<Ls3File> Ls3FileReader::readLs3File(LPCWSTR fileName)
 		lstrcpyn(result->dir, fileName, MAX_PATH);
 		PathRemoveFileSpec(result->dir);
 
-		readZusiNode(*result, *rootNode);
+		readZusiNode(*result, *rootNode, lodMask);
 		return result;
 	}
 	catch (...) {
@@ -35,18 +36,19 @@ unique_ptr<Ls3File> Ls3FileReader::readLs3File(LPCWSTR fileName)
 	}
 }
 
-void Ls3FileReader::readZusiNode(Ls3File &file, xml_node<wchar_t> &zusiNode)
+void Ls3FileReader::readZusiNode(Ls3File &file, xml_node<wchar_t> &zusiNode,
+	const unsigned char lodMask)
 {
 	xml_node<wchar_t> *landschaftNode = zusiNode.first_node(L"Landschaft");
 	if (!landschaftNode) {
 		return;
 	}
 
-	readLandschaftNode(file, *landschaftNode);
+	readLandschaftNode(file, *landschaftNode, lodMask);
 }
 
 void Ls3FileReader::readLandschaftNode(Ls3File &file,
-	xml_node<wchar_t> &landschaftNode)
+	xml_node<wchar_t> &landschaftNode, const unsigned char lodMask)
 {
 	bool useLsbFile = false;
 	HANDLE lsbFile = INVALID_HANDLE_VALUE;
@@ -83,7 +85,7 @@ void Ls3FileReader::readLandschaftNode(Ls3File &file,
 			readSubSetNode(file, useLsbFile, lsbFile, *childNode);
 		}
 		else if (wcsicmp(childNode->name(), L"Verknuepfte") == 0) {
-			readVerknuepfteNode(file, *childNode);
+			readVerknuepfteNode(file, *childNode, lodMask);
 		}
 	}
 
@@ -102,6 +104,7 @@ void Ls3FileReader::readSubSetNode(Ls3File &file, bool useLsbFile,
 	ZeroMemory(&subset.ambientColor, sizeof(subset.ambientColor));
 	ZeroMemory(&subset.diffuseColor, sizeof(subset.diffuseColor));
 	ZeroMemory(&subset.renderFlags, sizeof(subset.renderFlags));
+	subset.lodMask = 0x0F; // visible in all LODs
 
 	xml_attribute<wchar_t> *diffuseAttribute = subsetNode.first_attribute(L"C");
 	if (diffuseAttribute)
@@ -135,7 +138,7 @@ void Ls3FileReader::readSubSetNode(Ls3File &file, bool useLsbFile,
 
 		int numVertices = _wtoi(meshVAttribute->value());
 		int numFaceIndices = _wtoi(meshIAttribute->value());
-
+		
 		// Insert code to read vertex and face data from LSB file here
 	}
 
@@ -162,7 +165,7 @@ void Ls3FileReader::readSubSetNode(Ls3File &file, bool useLsbFile,
 }
 
 void Ls3FileReader::readVerknuepfteNode(Ls3File &file,
-	xml_node<wchar_t> &verknuepfteNode)
+	xml_node<wchar_t> &verknuepfteNode, const unsigned char lodMask)
 {
 	xml_node<wchar_t> *dateiNode = verknuepfteNode.first_node(L"Datei");
 	if (!dateiNode) {
@@ -180,6 +183,17 @@ void Ls3FileReader::readVerknuepfteNode(Ls3File &file,
 			file.dir);
 	if (filePath.empty())
 	{
+		return;
+	}
+
+	BYTE linkedLodMask = 0x0F;
+	xml_attribute<wchar_t> *lodAttribute =
+		verknuepfteNode.first_attribute(L"LODbit");
+	if (lodAttribute) {
+		linkedLodMask = (BYTE) _wtoi(lodAttribute->value());
+	}
+
+	if ((lodMask & linkedLodMask) == 0) {
 		return;
 	}
 
@@ -203,9 +217,11 @@ void Ls3FileReader::readVerknuepfteNode(Ls3File &file,
 		read3DCoordinates(pos, *skNode);
 	}
 
-	unique_ptr<Ls3File> linkedFile = readLs3File(filePath.c_str());
-	for (auto subset : linkedFile->subsets) {
+	unique_ptr<Ls3File> linkedFile = readLs3File(filePath.c_str(), lodMask);
+	for (auto &subset : linkedFile->subsets) {
 		// TODO transform vertices
+		subset.lodMask &= linkedLodMask;
+
 		file.subsets.push_back(subset);
 	}
 }
