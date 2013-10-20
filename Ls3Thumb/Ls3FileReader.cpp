@@ -305,7 +305,152 @@ void Ls3FileReader::readTexturNode(Ls3MeshSubset &subset, Ls3File &file,
 void Ls3FileReader::readRenderFlagsNode(Ls3MeshSubset &subset,
 	xml_node<wchar_t> &renderFlagsNode)
 {
+	Ls3RenderFlags Ls3TexturePresets [] =
+	{
+		// Preset 1
+		{ 0, 1, 1, 2, 0, 0,
+		{ 4, 0, 2, 0, 1, 0, 0, 0, 3, 3, 1 },
+		{ 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1 },
+		{ 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0 }},
 
+		// Preset 2
+		{ 1, 5, 6, 2, 0, 1,
+		{ 4, 0, 2, 0, 2, 0, 2, 0, 3, 3, 1 },
+		{ 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1 },
+		{ 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0 } },
+
+		// Preset 3
+		{ 0, 1, 1, 2, 0, 0,
+		{ 4, 0, 2, 0, 1, 0, 0, 0, 3, 3, 5 },
+		{ 4, 0, 2, 0, 2, 0, 2, 0, 3, 3, 1 },
+		{ 16, 0, 1, 5, 0, 0, 0, 0, 0, 0, 0 } },
+
+		// Preset 4
+		{ 1, 5, 6, 2, 1, 1,
+		{ 4, 0, 2, 0, 2, 0, 2, 0, 3, 3, 1 },
+		{ 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1 },
+		{ 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0 } },
+
+		// Preset 5
+		{ 1, 1, 1, 2, 0, 1,
+		{ 4, 0, 2, 0, 2, 0, 2, 0, 3, 3, 1 },
+		{ 13, 0, 2, 0, 1, 0, 0, 0, 3, 3, 1 },
+		{ 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0 } },
+
+		// Preset 6
+		{ 1, 6, 3, 2, 1, 1,
+		{ 4, 0, 2, 0, 14, 0, 2, 0, 3, 3, 1 },
+		{ 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1 },
+		{ 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0 } },
+
+		// Preset 7
+		{ 1, 5, 6, 2, 1, 1,
+		{ 4, 0, 2, 0, 2, 0, 2, 3, 3, 3, 1 },
+		{ 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1 },
+		{ 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0 } },
+
+		// Preset 8
+		{ 100, 5, 6, 2, 1, 1,
+		{ 4, 0, 2, 0, 4, 0, 2, 0, 3, 3, 1 },
+		{ 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1 },
+		{ 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0 } },
+
+		// Preset 9
+		{ 1, 5, 6, 2, 1, 1,
+		{ 4, 0, 2, 0, 2, 0, 2, 3, 3, 3, 1 },
+		{ 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1 },
+		{ 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0 } },
+	};
+
+	unsigned char texPreset = 0;
+	xml_attribute<wchar_t> *texPresetAttribute =
+		renderFlagsNode.first_attribute(L"TexVoreinstellung");
+	if (texPresetAttribute) {
+		texPreset = _wtoi(texPresetAttribute->value());
+	}
+
+	if (texPreset > 0) {
+		if (texPreset <= 9) {
+			subset.renderFlags = Ls3TexturePresets[texPreset - 1];
+		}
+		return;
+	}
+
+	for (xml_attribute<wchar_t> *attr = renderFlagsNode.first_attribute();
+		attr; attr = attr->next_attribute())
+	{
+		DWORD value = _wtoi(attr->value());
+		if (wcscmp(attr->name(), L"ALPHAREF") == 0) {
+			subset.renderFlags.ALPHAREF = value;
+		}
+		else if (wcscmp(attr->name(), L"SRCBLEND") == 0) {
+			subset.renderFlags.SRCBLEND = value;
+		}
+		else if (wcscmp(attr->name(), L"DESTBLEND") == 0) {
+			subset.renderFlags.DESTBLEND = value;
+		}
+		else if (wcscmp(attr->name(), L"SHADEMODE") == 0) {
+			subset.renderFlags.SHADEMODE = value;
+		}
+	}
+
+	for (xml_node<wchar_t> *node = renderFlagsNode.first_node();
+		node; node = node->next_sibling())
+	{
+		if (wcscmp(node->name(), L"SubSetTexFlags") == 0) {
+			readSubSetTexFlagsNode(subset.renderFlags.stage1, *node);
+		}
+		else if (wcscmp(node->name(), L"SubSetTexFlags2") == 0) {
+			readSubSetTexFlagsNode(subset.renderFlags.stage2, *node);
+		}
+		else if (wcscmp(node->name(), L"SubSetTexFlags3") == 0) {
+			readSubSetTexFlagsNode(subset.renderFlags.stage3, *node);
+		}
+	}
+}
+
+
+void Ls3FileReader::readSubSetTexFlagsNode(TEXSTAGESETTING &texStageSetting,
+	xml_node<wchar_t> &texFlagsNode)
+{
+	for (xml_attribute<wchar_t> *attr = texFlagsNode.first_attribute();
+		attr; attr = attr->next_attribute())
+	{
+		DWORD value = _wtoi(attr->value());
+		if (wcscmp(attr->name(), L"COLOROP") == 0) {
+			texStageSetting.COLOROP = value;
+		}
+		else if (wcscmp(attr->name(), L"COLORARG0") == 0) {
+			texStageSetting.COLORARG0 = value;
+		}
+		else if (wcscmp(attr->name(), L"COLORARG1") == 0) {
+			texStageSetting.COLORARG1 = value;
+		}
+		else if (wcscmp(attr->name(), L"COLORARG2") == 0) {
+			texStageSetting.COLORARG2 = value;
+		}
+		else if (wcscmp(attr->name(), L"ALPHAOP") == 0) {
+			texStageSetting.ALPHAOP = value;
+		}
+		else if (wcscmp(attr->name(), L"ALPHAARG0") == 0) {
+			texStageSetting.ALPHAARG0 = value;
+		}
+		else if (wcscmp(attr->name(), L"ALPHAARG1") == 0) {
+			texStageSetting.ALPHAARG1 = value;
+		}
+		else if (wcscmp(attr->name(), L"ALPHAARG2") == 0) {
+			texStageSetting.ALPHAARG2 = value;
+		}
+		else if (wcscmp(attr->name(), L"MAGFILTER") == 0) {
+			texStageSetting.MAGFILTER = value;
+		}
+		else if (wcscmp(attr->name(), L"MINFILTER") == 0) {
+			texStageSetting.MINFILTER = value;
+		}
+		else if (wcscmp(attr->name(), L"RESULTARG") == 0) {
+			texStageSetting.RESULTARG = value;
+		}
+	}
 }
 	
 

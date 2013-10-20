@@ -21,4 +21,6 @@ public:
 private:
 	static void CalculateBoundingBox(const Ls3File &file,
 		BoundingBox &boundingBox);
+	static void SetTextureStageState(const int stage,
+		const TEXSTAGESETTING &settings, LPDIRECT3DDEVICE9 d3ddev);
 };

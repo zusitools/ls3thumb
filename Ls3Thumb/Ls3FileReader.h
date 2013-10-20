@@ -32,6 +32,8 @@ private:
 		xml_node<wchar_t> &texturNode);
 	static void readRenderFlagsNode(Ls3MeshSubset &subset,
 		xml_node<wchar_t> &renderFlagsNode);
+	static void readSubSetTexFlagsNode(TEXSTAGESETTING &texStageSetting,
+		xml_node<wchar_t> &texFlagsNode);
 
 	static void read3DCoordinates(COORD3D &coords, xml_node<wchar_t> &node);
 	static wstring GetAbsoluteFilePath(LPCWSTR fileName,

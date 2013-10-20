@@ -154,6 +154,15 @@ HRESULT Ls3FileRenderer::RenderScene(Ls3File &file, SIZE &size, LPDIRECT3DDEVICE
 
 		d3ddev->SetTexture(0, pTexture);
 
+		// Set render flags
+		SetTextureStageState(0, subset.renderFlags.stage1, d3ddev);
+		SetTextureStageState(1, subset.renderFlags.stage2, d3ddev);
+		SetTextureStageState(2, subset.renderFlags.stage3, d3ddev);
+		d3ddev->SetRenderState(D3DRS_ALPHAREF, subset.renderFlags.ALPHAREF);
+		d3ddev->SetRenderState(D3DRS_SRCBLEND, subset.renderFlags.SRCBLEND);
+		d3ddev->SetRenderState(D3DRS_DESTBLEND, subset.renderFlags.DESTBLEND);
+		d3ddev->SetRenderState(D3DRS_SHADEMODE, subset.renderFlags.SHADEMODE);
+
 		// Draw the mesh
 		TRY(d3ddev->SetIndices(pIndexBuffer));
 		TRY(d3ddev->SetStreamSource(0, pVertexBuffer, 0, sizeof(ZUSIVERTEX)));
@@ -187,4 +196,18 @@ void Ls3FileRenderer::CalculateBoundingBox(const Ls3File &file,
 			if (p.z > boundingBox.zmax) boundingBox.zmax = p.z;
 		}
 	}
+}
+
+void Ls3FileRenderer::SetTextureStageState(const int stage,
+	const TEXSTAGESETTING &settings, LPDIRECT3DDEVICE9 d3ddev)
+{
+	d3ddev->SetTextureStageState(stage, D3DTSS_COLOROP, settings.COLOROP);
+	d3ddev->SetTextureStageState(stage, D3DTSS_COLORARG0, settings.COLORARG0);
+	d3ddev->SetTextureStageState(stage, D3DTSS_COLORARG1, settings.COLORARG1);
+	d3ddev->SetTextureStageState(stage, D3DTSS_COLORARG2, settings.COLORARG2);
+	d3ddev->SetTextureStageState(stage, D3DTSS_ALPHAOP, settings.ALPHAOP);
+	d3ddev->SetTextureStageState(stage, D3DTSS_ALPHAARG0, settings.ALPHAARG0);
+	d3ddev->SetTextureStageState(stage, D3DTSS_ALPHAARG1, settings.ALPHAARG1);
+	d3ddev->SetTextureStageState(stage, D3DTSS_ALPHAARG2, settings.ALPHAARG2);
+	d3ddev->SetTextureStageState(stage, D3DTSS_RESULTARG, settings.RESULTARG);
 }
