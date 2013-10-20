@@ -11,7 +11,6 @@
 
 #include "Ls3File.h"
 #include "Ls3FileReader.h"
-#include "Ls3FileUtils.h"
 #include "Ls3ThumbnailRenderer.h"
 
 #include "Ls3Thumb_i.h"
