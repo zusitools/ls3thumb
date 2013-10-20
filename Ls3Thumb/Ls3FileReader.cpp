@@ -155,6 +155,10 @@ void Ls3FileReader::readSubSetNode(Ls3File &file, bool useLsbFile,
 		{
 			readTexturNode(subset, file, *node);
 		}
+		else if (wcsicmp(node->name(), L"RenderFlags") == 0)
+		{
+			readRenderFlagsNode(subset, *node);
+		}
 	}
 }
 
@@ -273,6 +277,13 @@ void Ls3FileReader::readTexturNode(Ls3MeshSubset &subset, Ls3File &file,
 			}
 		}
 	}
+}
+
+
+void Ls3FileReader::readRenderFlagsNode(Ls3MeshSubset &subset,
+	xml_node<wchar_t> &renderFlagsNode)
+{
+
 }
 	
 
