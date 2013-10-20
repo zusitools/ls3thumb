@@ -11,7 +11,8 @@
 #define FOV_Y (D3DX_PI / 4)
 #define CAMERA_ANGLE_DEGREES 40.0f
 
-HRESULT Ls3FileRenderer::RenderScene(Ls3File &file, SIZE &size, LPDIRECT3DDEVICE9 &d3ddev)
+HRESULT Ls3FileRenderer::RenderScene(const Ls3File &file, const SIZE &size,
+	LPDIRECT3DDEVICE9 &d3ddev)
 {
 	HRESULT hr;
 

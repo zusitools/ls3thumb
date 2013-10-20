@@ -16,7 +16,8 @@ struct BoundingBox {
 class Ls3FileRenderer
 {
 public:
-	static HRESULT RenderScene(Ls3File &file, SIZE &size, LPDIRECT3DDEVICE9 &d3ddev);
+	static HRESULT RenderScene(const Ls3File &file, const SIZE &size,
+		LPDIRECT3DDEVICE9 &d3ddev);
 
 private:
 	static void CalculateBoundingBox(const Ls3File &file,

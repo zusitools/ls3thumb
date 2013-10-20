@@ -12,11 +12,12 @@ public:
 	Ls3ThumbnailRenderer(HINSTANCE hInstance);
 	~Ls3ThumbnailRenderer();
 
-	HRESULT RenderLs3File(HBITMAP &resultBitmap, Ls3File &file, SIZE &size);
+	HRESULT RenderLs3File(HBITMAP &resultBitmap, const Ls3File &file,
+		const SIZE &size);
 
 private:
 	HRESULT CreateHiddenWindow(HWND &handle);
-	HRESULT InitDirect3D(HWND hWnd, SIZE &backBufferSize);
+	HRESULT InitDirect3D(const HWND hWnd, const SIZE &backBufferSize);
 	void CleanUpDirect3D();
 	
 	HRESULT ReadImageFromDirect3D(HBITMAP &phBmpBitmap);

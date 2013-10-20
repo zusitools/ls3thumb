@@ -4,7 +4,7 @@
 #define LONG_LONG_TO_COLOR(colorVal) { colorVal & 0xFF, \
 	(colorVal >> 8) & 0xFF, (colorVal >> 16) & 0xFF, (colorVal >> 24) & 0xFF }
 
-unique_ptr<Ls3File> Ls3FileReader::readLs3File(LPCWSTR fileName,
+unique_ptr<Ls3File> Ls3FileReader::readLs3File(const LPCWSTR fileName,
 	const unsigned char lodMask)
 {
 	unique_ptr<Ls3File> result(new Ls3File());
@@ -36,8 +36,8 @@ unique_ptr<Ls3File> Ls3FileReader::readLs3File(LPCWSTR fileName,
 	}
 }
 
-void Ls3FileReader::readZusiNode(Ls3File &file, xml_node<wchar_t> &zusiNode,
-	const unsigned char lodMask)
+void Ls3FileReader::readZusiNode(Ls3File &file,
+	const xml_node<wchar_t> &zusiNode, const unsigned char lodMask)
 {
 	xml_node<wchar_t> *landschaftNode = zusiNode.first_node(L"Landschaft");
 	if (!landschaftNode) {
@@ -48,7 +48,7 @@ void Ls3FileReader::readZusiNode(Ls3File &file, xml_node<wchar_t> &zusiNode,
 }
 
 void Ls3FileReader::readLandschaftNode(Ls3File &file,
-	xml_node<wchar_t> &landschaftNode, const unsigned char lodMask)
+	const xml_node<wchar_t> &landschaftNode, const unsigned char lodMask)
 {
 	bool useLsbFile = false;
 	HANDLE lsbFile = INVALID_HANDLE_VALUE;
@@ -94,8 +94,8 @@ void Ls3FileReader::readLandschaftNode(Ls3File &file,
 	}
 }
 
-void Ls3FileReader::readSubSetNode(Ls3File &file, bool useLsbFile,
-	HANDLE lsbFile, xml_node<wchar_t> &subsetNode)
+void Ls3FileReader::readSubSetNode(Ls3File &file, const bool useLsbFile,
+	const HANDLE lsbFile, const xml_node<wchar_t> &subsetNode)
 {
 	file.subsets.push_back(Ls3MeshSubset());
 	Ls3MeshSubset &subset = file.subsets.back();
@@ -165,7 +165,7 @@ void Ls3FileReader::readSubSetNode(Ls3File &file, bool useLsbFile,
 }
 
 void Ls3FileReader::readVerknuepfteNode(Ls3File &file,
-	xml_node<wchar_t> &verknuepfteNode, const unsigned char lodMask)
+	const xml_node<wchar_t> &verknuepfteNode, const unsigned char lodMask)
 {
 	xml_node<wchar_t> *dateiNode = verknuepfteNode.first_node(L"Datei");
 	if (!dateiNode) {
@@ -234,7 +234,7 @@ void Ls3FileReader::readVerknuepfteNode(Ls3File &file,
 }
 
 void Ls3FileReader::readVertexNode(Ls3MeshSubset &subset,
-	xml_node<wchar_t> &vertexNode)
+	const xml_node<wchar_t> &vertexNode)
 {
 	subset.vertices.push_back(ZUSIVERTEX());
 	ZUSIVERTEX& vertex = subset.vertices.back();
@@ -272,7 +272,7 @@ void Ls3FileReader::readVertexNode(Ls3MeshSubset &subset,
 }
 
 void Ls3FileReader::readFaceNode(Ls3MeshSubset &subset,
-	xml_node<wchar_t> &faceNode)
+	const xml_node<wchar_t> &faceNode)
 {
 	// The face indices are stored as semicolon-separated values
 	// in the attribute "i"
@@ -302,7 +302,7 @@ void Ls3FileReader::readFaceNode(Ls3MeshSubset &subset,
 
 
 void Ls3FileReader::readTexturNode(Ls3MeshSubset &subset, Ls3File &file,
-	xml_node<wchar_t> &texturNode)
+	const xml_node<wchar_t> &texturNode)
 {
 	xml_node<wchar_t> *dateiNode = texturNode.first_node(L"Datei");
 	if (dateiNode) {
@@ -320,7 +320,7 @@ void Ls3FileReader::readTexturNode(Ls3MeshSubset &subset, Ls3File &file,
 
 
 void Ls3FileReader::readRenderFlagsNode(Ls3MeshSubset &subset,
-	xml_node<wchar_t> &renderFlagsNode)
+	const xml_node<wchar_t> &renderFlagsNode)
 {
 	Ls3RenderFlags Ls3TexturePresets [] =
 	{
@@ -428,7 +428,7 @@ void Ls3FileReader::readRenderFlagsNode(Ls3MeshSubset &subset,
 
 
 void Ls3FileReader::readSubSetTexFlagsNode(TEXSTAGESETTING &texStageSetting,
-	xml_node<wchar_t> &texFlagsNode)
+	const xml_node<wchar_t> &texFlagsNode)
 {
 	for (xml_attribute<wchar_t> *attr = texFlagsNode.first_attribute();
 		attr; attr = attr->next_attribute())
@@ -471,7 +471,8 @@ void Ls3FileReader::readSubSetTexFlagsNode(TEXSTAGESETTING &texStageSetting,
 }
 	
 
-void Ls3FileReader::read3DCoordinates(COORD3D &coords, xml_node<wchar_t> &node)
+void Ls3FileReader::read3DCoordinates(COORD3D &coords,
+	const xml_node<wchar_t> &node)
 {
 	for (xml_attribute<wchar_t> *attr = node.first_attribute();
 		attr; attr = attr->next_attribute())
@@ -491,8 +492,8 @@ void Ls3FileReader::read3DCoordinates(COORD3D &coords, xml_node<wchar_t> &node)
 	}
 }
 
-wstring Ls3FileReader::GetAbsoluteFilePath(LPCWSTR fileName,
-	LPCWSTR parentFileDir)
+wstring Ls3FileReader::GetAbsoluteFilePath(const LPCWSTR fileName,
+	const LPCWSTR parentFileDir)
 {
 	TCHAR result[MAX_PATH];
 

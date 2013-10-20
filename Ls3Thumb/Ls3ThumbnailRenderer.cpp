@@ -22,7 +22,8 @@ Ls3ThumbnailRenderer::~Ls3ThumbnailRenderer()
 }
 
 
-HRESULT Ls3ThumbnailRenderer::RenderLs3File(HBITMAP &resultBitmap, Ls3File &file, SIZE &size)
+HRESULT Ls3ThumbnailRenderer::RenderLs3File(HBITMAP &resultBitmap,
+	const Ls3File &file, const SIZE &size)
 {
 	wchar_t debug_buf[2048];
 	HRESULT hr;
@@ -93,7 +94,8 @@ HRESULT Ls3ThumbnailRenderer::CreateHiddenWindow(HWND &handle)
 	return S_OK;
 }
 
-HRESULT Ls3ThumbnailRenderer::InitDirect3D(HWND hWnd, SIZE &backBufferSize)
+HRESULT Ls3ThumbnailRenderer::InitDirect3D(const HWND hWnd,
+	const SIZE &backBufferSize)
 {
 	m_d3d = Direct3DCreate9(D3D_SDK_VERSION);
 	D3DPRESENT_PARAMETERS d3dpp;
