@@ -1,6 +1,9 @@
 #include "stdafx.h"
 #include "Ls3FileReader.h"
 
+#define LONG_LONG_TO_COLOR(colorVal) { colorVal & 0xFF, \
+	(colorVal >> 8) & 0xFF, (colorVal >> 16) & 0xFF, (colorVal >> 24) & 0xFF }
+
 unique_ptr<Ls3File> Ls3FileReader::readLs3File(LPCWSTR fileName)
 {
 	unique_ptr<Ls3File> result(new Ls3File());
@@ -96,8 +99,8 @@ void Ls3FileReader::readSubSetNode(Ls3File &file, bool useLsbFile,
 	Ls3MeshSubset &subset = file.subsets.back();
 
 	// Set default values
-	subset.ambientColor = 0;
-	subset.diffuseColor = 0;
+	ZeroMemory(&subset.ambientColor, sizeof(subset.ambientColor));
+	ZeroMemory(&subset.diffuseColor, sizeof(subset.diffuseColor));
 	ZeroMemory(&subset.renderFlags, sizeof(subset.renderFlags));
 
 	xml_attribute<wchar_t> *diffuseAttribute = subsetNode.first_attribute(L"C");
@@ -105,9 +108,7 @@ void Ls3FileReader::readSubSetNode(Ls3File &file, bool useLsbFile,
 	{
 		long long colorVal =
 			wcstoll(diffuseAttribute->value(), (wchar_t**) NULL, 16);
-		subset.diffuseColor = RGB(colorVal & 0xFF, (colorVal >> 8) & 0xFF,
-			(colorVal >> 16) & 0xFF);
-		// TODO alpha
+		subset.diffuseColor = LONG_LONG_TO_COLOR(colorVal);
 	}
 
 	xml_attribute<wchar_t> *ambientAttribute = subsetNode.first_attribute(L"CA");
@@ -115,9 +116,7 @@ void Ls3FileReader::readSubSetNode(Ls3File &file, bool useLsbFile,
 	{
 		long long colorVal =
 			wcstoll(ambientAttribute->value(), (wchar_t**) NULL, 16);
-		subset.ambientColor = RGB(colorVal & 0xFF, (colorVal >> 8) & 0xFF,
-			(colorVal >> 16) & 0xFF);
-		// TODO alpha
+		subset.ambientColor = LONG_LONG_TO_COLOR(colorVal);
 	}
 	else
 	{

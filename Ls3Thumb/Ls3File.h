@@ -13,6 +13,10 @@ struct COORD2D {
 	FLOAT u, v;
 };
 
+struct COLOR {
+	BYTE r, g, b, a;
+};
+
 struct ZUSIVERTEX {
 	COORD3D pos;
 	COORD3D normal;
@@ -68,12 +72,12 @@ struct Ls3MeshSubset
 	/**
 	* The ambient color of this subset.
 	*/
-	COLORREF ambientColor;
+	COLOR ambientColor;
 
 	/**
 	 * The diffuse color of this subset.
 	 */
-	COLORREF diffuseColor;
+	COLOR diffuseColor;
 
 	/**
 	 * The file names of the textures used in this subset.
