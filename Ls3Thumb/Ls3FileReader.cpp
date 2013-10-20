@@ -252,6 +252,23 @@ void Ls3FileReader::readVertexNode(Ls3MeshSubset &subset,
 			read3DCoordinates(vertex.normal, *vertexChildNode);
 		}
 	}
+
+	for (xml_attribute<wchar_t> *attr = vertexNode.first_attribute();
+		attr; attr = attr->next_attribute())
+	{
+		if (wcscmp(attr->name(), L"U1") == 0) {
+			vertex.tex1.u = _wtof(attr->value());
+		}
+		else if (wcscmp(attr->name(), L"V1") == 0) {
+			vertex.tex1.v = _wtof(attr->value());
+		}
+		else if (wcscmp(attr->name(), L"U2") == 0) {
+			// vertex.tex2.u = _wtof(attr->value());
+		}
+		else if (wcscmp(attr->name(), L"V2") == 0) {
+			// vertex.tex2.v = _wtof(attr->value());
+		}
+	}
 }
 
 void Ls3FileReader::readFaceNode(Ls3MeshSubset &subset,
