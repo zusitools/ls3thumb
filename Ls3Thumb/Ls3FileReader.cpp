@@ -81,10 +81,10 @@ void Ls3FileReader::readLandschaftNode(Ls3File &file,
 	for (xml_node<wchar_t> *childNode = landschaftNode.first_node();
 		childNode; childNode = childNode->next_sibling())
 	{
-		if (wcsicmp(childNode->name(), L"SubSet") == 0) {
+		if (wcscmp(childNode->name(), L"SubSet") == 0) {
 			readSubSetNode(file, useLsbFile, lsbFile, *childNode);
 		}
-		else if (wcsicmp(childNode->name(), L"Verknuepfte") == 0) {
+		else if (wcscmp(childNode->name(), L"Verknuepfte") == 0) {
 			readVerknuepfteNode(file, *childNode, lodMask);
 		}
 	}
@@ -145,19 +145,19 @@ void Ls3FileReader::readSubSetNode(Ls3File &file, bool useLsbFile,
 	for (xml_node<wchar_t> *node = subsetNode.first_node(); node;
 		node = node->next_sibling())
 	{
-		if (wcsicmp(node->name(), L"Vertex") == 0)
+		if (wcscmp(node->name(), L"Vertex") == 0)
 		{
 			readVertexNode(subset, *node);
 		}
-		else if (wcsicmp(node->name(), L"Face") == 0)
+		else if (wcscmp(node->name(), L"Face") == 0)
 		{
 			readFaceNode(subset, *node);
 		}
-		else if (wcsicmp(node->name(), L"Textur") == 0)
+		else if (wcscmp(node->name(), L"Textur") == 0)
 		{
 			readTexturNode(subset, file, *node);
 		}
-		else if (wcsicmp(node->name(), L"RenderFlags") == 0)
+		else if (wcscmp(node->name(), L"RenderFlags") == 0)
 		{
 			readRenderFlagsNode(subset, *node);
 		}
@@ -243,11 +243,11 @@ void Ls3FileReader::readVertexNode(Ls3MeshSubset &subset,
 	for (xml_node<wchar_t> *vertexChildNode = vertexNode.first_node();
 		vertexChildNode; vertexChildNode = vertexChildNode->next_sibling())
 	{
-		if (wcsicmp(vertexChildNode->name(), L"p") == 0)
+		if (wcscmp(vertexChildNode->name(), L"p") == 0)
 		{
 			read3DCoordinates(vertex.pos, *vertexChildNode);
 		}
-		else if (wcsicmp(vertexChildNode->name(), L"n") == 0)
+		else if (wcscmp(vertexChildNode->name(), L"n") == 0)
 		{
 			read3DCoordinates(vertex.normal, *vertexChildNode);
 		}
@@ -314,15 +314,15 @@ void Ls3FileReader::read3DCoordinates(COORD3D &coords, xml_node<wchar_t> &node)
 	for (xml_attribute<wchar_t> *attr = node.first_attribute();
 		attr; attr = attr->next_attribute())
 	{
-		if (wcsicmp(attr->name(), L"x") == 0)
+		if (wcscmp(attr->name(), L"x") == 0)
 		{
 			coords.x = _wtof(attr->value());
 		}
-		else if (wcsicmp(attr->name(), L"y") == 0)
+		else if (wcscmp(attr->name(), L"y") == 0)
 		{
 			coords.y = _wtof(attr->value());
 		}
-		else if (wcsicmp(attr->name(), L"z") == 0)
+		else if (wcscmp(attr->name(), L"z") == 0)
 		{
 			coords.z = _wtof(attr->value());
 		}
