@@ -219,8 +219,15 @@ void Ls3FileReader::readVerknuepfteNode(Ls3File &file,
 
 	unique_ptr<Ls3File> linkedFile = readLs3File(filePath.c_str(), lodMask);
 	for (auto &subset : linkedFile->subsets) {
-		// TODO transform vertices
 		subset.lodMask &= linkedLodMask;
+
+		// TODO scale/rotate vertices and their normal
+		for (auto &vertex : subset.vertices)
+		{
+			vertex.pos.x += pos.x;
+			vertex.pos.y += pos.y;
+			vertex.pos.z += pos.z;
+		}
 
 		file.subsets.push_back(subset);
 	}
