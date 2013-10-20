@@ -73,78 +73,137 @@ void Ls3FileReader::readLandschaftNode(Ls3File &file,
 		}
 	}
 
-	for (xml_node<wchar_t> *subsetNode = landschaftNode.first_node(L"SubSet");
-		subsetNode; subsetNode = subsetNode->next_sibling(L"SubSet"))
+	for (xml_node<wchar_t> *childNode = landschaftNode.first_node();
+		childNode; childNode = childNode->next_sibling())
 	{
-		file.subsets.push_back(Ls3MeshSubset());
-		Ls3MeshSubset &subset = file.subsets.back();
-
-		// Set default color values
-		subset.ambientColor = 0;
-		subset.diffuseColor = 0;
-
-		xml_attribute<wchar_t> *diffuseAttribute =
-			subsetNode->first_attribute(L"C");
-		if (diffuseAttribute)
-		{
-			long long colorVal =
-				wcstoll(diffuseAttribute->value(), (wchar_t**) NULL, 16);
-			subset.diffuseColor = RGB(colorVal & 0xFF, (colorVal >> 8) & 0xFF,
-				(colorVal >> 16) & 0xFF);
-			// TODO alpha
+		if (wcsicmp(childNode->name(), L"SubSet") == 0) {
+			readSubSetNode(file, useLsbFile, lsbFile, *childNode);
 		}
-
-		xml_attribute<wchar_t> *ambientAttribute =
-			subsetNode->first_attribute(L"CA");
-		if (ambientAttribute)
-		{
-			long long colorVal =
-				wcstoll(ambientAttribute->value(), (wchar_t**) NULL, 16);
-			subset.ambientColor = RGB(colorVal & 0xFF, (colorVal >> 8) & 0xFF,
-				(colorVal >> 16) & 0xFF);
-			// TODO alpha
-		}
-		else
-		{
-			subset.ambientColor = subset.diffuseColor;
-		}
-
-		if (useLsbFile)
-		{
-			xml_attribute<wchar_t> *meshVAttribute =
-				subsetNode->first_attribute(L"MeshV");
-			if (!meshVAttribute) continue;
-
-			xml_attribute<wchar_t> *meshIAttribute =
-				subsetNode->first_attribute(L"MeshI");
-			if (!meshIAttribute) continue;
-
-			int numVertices = _wtoi(meshVAttribute->value());
-			int numFaceIndices = _wtoi(meshIAttribute->value());
-
-			// TODO read vertices and face indices from LSB file
-		}
-
-		for (xml_node<wchar_t> *node = subsetNode->first_node(); node;
-			node = node->next_sibling())
-		{
-			if (wcsicmp(node->name(), L"Vertex") == 0)
-			{
-				readVertexNode(subset, *node);
-			}
-			else if (wcsicmp(node->name(), L"Face") == 0)
-			{
-				readFaceNode(subset, *node);
-			}
-			else if (wcsicmp(node->name(), L"Textur") == 0)
-			{
-				readTexturNode(subset, file, *node);
-			}
+		else if (wcsicmp(childNode->name(), L"Verknuepfte") == 0) {
+			readVerknuepfteNode(file, *childNode);
 		}
 	}
 
 	if (useLsbFile) {
 		CloseHandle(lsbFile);
+	}
+}
+
+void Ls3FileReader::readSubSetNode(Ls3File &file, bool useLsbFile,
+	HANDLE lsbFile, xml_node<wchar_t> &subsetNode)
+{
+	file.subsets.push_back(Ls3MeshSubset());
+	Ls3MeshSubset &subset = file.subsets.back();
+
+	// Set default values
+	subset.ambientColor = 0;
+	subset.diffuseColor = 0;
+	ZeroMemory(&subset.renderFlags, sizeof(subset.renderFlags));
+
+	xml_attribute<wchar_t> *diffuseAttribute = subsetNode.first_attribute(L"C");
+	if (diffuseAttribute)
+	{
+		long long colorVal =
+			wcstoll(diffuseAttribute->value(), (wchar_t**) NULL, 16);
+		subset.diffuseColor = RGB(colorVal & 0xFF, (colorVal >> 8) & 0xFF,
+			(colorVal >> 16) & 0xFF);
+		// TODO alpha
+	}
+
+	xml_attribute<wchar_t> *ambientAttribute = subsetNode.first_attribute(L"CA");
+	if (ambientAttribute)
+	{
+		long long colorVal =
+			wcstoll(ambientAttribute->value(), (wchar_t**) NULL, 16);
+		subset.ambientColor = RGB(colorVal & 0xFF, (colorVal >> 8) & 0xFF,
+			(colorVal >> 16) & 0xFF);
+		// TODO alpha
+	}
+	else
+	{
+		subset.ambientColor = subset.diffuseColor;
+	}
+
+	if (useLsbFile)
+	{
+		xml_attribute<wchar_t> *meshVAttribute =
+			subsetNode.first_attribute(L"MeshV");
+		if (!meshVAttribute) return;
+
+		xml_attribute<wchar_t> *meshIAttribute =
+			subsetNode.first_attribute(L"MeshI");
+		if (!meshIAttribute) return;
+
+		int numVertices = _wtoi(meshVAttribute->value());
+		int numFaceIndices = _wtoi(meshIAttribute->value());
+
+		// Insert code to read vertex and face data from LSB file here
+	}
+
+	for (xml_node<wchar_t> *node = subsetNode.first_node(); node;
+		node = node->next_sibling())
+	{
+		if (wcsicmp(node->name(), L"Vertex") == 0)
+		{
+			readVertexNode(subset, *node);
+		}
+		else if (wcsicmp(node->name(), L"Face") == 0)
+		{
+			readFaceNode(subset, *node);
+		}
+		else if (wcsicmp(node->name(), L"Textur") == 0)
+		{
+			readTexturNode(subset, file, *node);
+		}
+	}
+}
+
+void Ls3FileReader::readVerknuepfteNode(Ls3File &file,
+	xml_node<wchar_t> &verknuepfteNode)
+{
+	xml_node<wchar_t> *dateiNode = verknuepfteNode.first_node(L"Datei");
+	if (!dateiNode) {
+		return;
+	}
+
+	xml_attribute<wchar_t> *fileNameAttribute =
+		dateiNode->first_attribute(L"Dateiname");
+	if (!fileNameAttribute)
+	{
+		return;
+	}
+
+	wstring filePath = GetAbsoluteFilePath(fileNameAttribute->value(),
+			file.dir);
+	if (filePath.empty())
+	{
+		return;
+	}
+
+	COORD3D pos, angle, scale;
+	ZeroMemory(&pos, sizeof(pos));
+	ZeroMemory(&angle, sizeof(angle));
+	ZeroMemory(&scale, sizeof(scale));
+
+	xml_node<wchar_t> *pNode = verknuepfteNode.first_node(L"p");
+	if (pNode) {
+		read3DCoordinates(pos, *pNode);
+	}
+
+	xml_node<wchar_t> *phiNode = verknuepfteNode.first_node(L"phi");
+	if (phiNode) {
+		read3DCoordinates(pos, *phiNode);
+	}
+
+	xml_node<wchar_t> *skNode = verknuepfteNode.first_node(L"sk");
+	if (skNode) {
+		read3DCoordinates(pos, *skNode);
+	}
+
+	unique_ptr<Ls3File> linkedFile = readLs3File(filePath.c_str());
+	for (auto subset : linkedFile->subsets) {
+		// TODO transform vertices
+		file.subsets.push_back(subset);
 	}
 }
 

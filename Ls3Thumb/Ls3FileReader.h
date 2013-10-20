@@ -18,6 +18,10 @@ private:
 	static void readZusiNode(Ls3File &file, xml_node<wchar_t> &zusiNode);
 	static void readLandschaftNode(Ls3File &file,
 		xml_node<wchar_t> &landschaftNode);
+	static void readSubSetNode(Ls3File &file, bool useLsbFile, HANDLE lsbFile,
+		xml_node<wchar_t> &subsetNode);
+	static void readVerknuepfteNode(Ls3File &file,
+		xml_node<wchar_t> &verknuepfteNode);
 	static void readVertexNode(Ls3MeshSubset &subset,
 		xml_node<wchar_t> &vertexNode);
 	static void readFaceNode(Ls3MeshSubset &subset,
