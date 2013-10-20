@@ -141,69 +141,62 @@ HRESULT Ls3ThumbnailRenderer::ReadImageFromDirect3D(HBITMAP &phBmpBitmap)
 	if (rtDesc.MultiSampleType != D3DMULTISAMPLE_NONE)
 	{
 		TRY(m_d3ddev->CreateRenderTarget(rtDesc.Width, rtDesc.Height, rtDesc.Format, D3DMULTISAMPLE_NONE, 0, FALSE, &resolvedSurface, NULL));
-		TRY(hr = m_d3ddev->StretchRect(renderTarget, NULL, resolvedSurface, NULL, D3DTEXF_NONE));
+		TRY(m_d3ddev->StretchRect(renderTarget, NULL, resolvedSurface, NULL, D3DTEXF_NONE));
 		renderTarget = resolvedSurface;
 	}
 
 	IDirect3DSurface9 *offscreenSurface;
 	TRY(m_d3ddev->CreateOffscreenPlainSurface(rtDesc.Width, rtDesc.Height, rtDesc.Format, D3DPOOL_SYSTEMMEM, &offscreenSurface, NULL));
+	TRY(m_d3ddev->GetRenderTargetData(renderTarget, offscreenSurface));
+	
+	// Here we have data in offscreenSurface.
+	D3DLOCKED_RECT lr;
+	RECT rect;
+	rect.left = 0;
+	rect.right = rtDesc.Width;
+	rect.top = 0;
+	rect.bottom = rtDesc.Height;
 
-	hr = m_d3ddev->GetRenderTargetData(renderTarget, offscreenSurface);
-	if (SUCCEEDED(hr))
-	{
-		// Here we have data in offscreenSurface.
-		D3DLOCKED_RECT lr;
-		RECT rect;
-		rect.left = 0;
-		rect.right = rtDesc.Width;
-		rect.top = 0;
-		rect.bottom = rtDesc.Height;
-		// Lock the surface to read pixels
-		hr = offscreenSurface->LockRect(&lr, &rect, D3DLOCK_READONLY);
-		if (SUCCEEDED(hr))
-		{
-			BITMAPINFO bmInfo;
-			memset(&bmInfo.bmiHeader, 0, sizeof(BITMAPINFOHEADER));
-			bmInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-			bmInfo.bmiHeader.biWidth = rtDesc.Width;
-			bmInfo.bmiHeader.biHeight = rtDesc.Height;
-			bmInfo.bmiHeader.biPlanes = 1;
-			bmInfo.bmiHeader.biBitCount = 32;
+	// Lock the surface to read pixels
+	TRY(offscreenSurface->LockRect(&lr, &rect, D3DLOCK_READONLY));
 
-			HDC pDC = GetDC(NULL);
-			HDC tmpDC = CreateCompatibleDC(pDC);
-			UINT32 *pPixels;
-			HBITMAP hBmpThumbnail = CreateDIBSection(tmpDC, &bmInfo,
-				DIB_RGB_COLORS, (void**) &pPixels, 0, 0);
+	BITMAPINFO bmInfo;
+	memset(&bmInfo.bmiHeader, 0, sizeof(BITMAPINFOHEADER));
+	bmInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	bmInfo.bmiHeader.biWidth = rtDesc.Width;
+	bmInfo.bmiHeader.biHeight = rtDesc.Height;
+	bmInfo.bmiHeader.biPlanes = 1;
+	bmInfo.bmiHeader.biBitCount = 32;
 
-			if (hBmpThumbnail == NULL) {
-				return E_FAIL;
-			}
+	HDC pDC = GetDC(NULL);
+	HDC tmpDC = CreateCompatibleDC(pDC);
+	UINT32 *pPixels;
+	HBITMAP hBmpThumbnail = CreateDIBSection(tmpDC, &bmInfo,
+		DIB_RGB_COLORS, (void**) &pPixels, 0, 0);
 
-			// Pointer to data is lt.pBits, each row is
-			// lr.Pitch bytes apart (often it is the same as width*bpp, but
-			// can be larger if driver uses padding)
-			LONG surfaceOffset = 0;
-			BYTE *data = (BYTE*) lr.pBits;
-			for (int i = 0; i < rtDesc.Height; i++)
-			{
-				for (int j = 0; j < rtDesc.Width; j++)
-				{
-					pPixels[(rtDesc.Height - 1 - i) * rtDesc.Width + j] = RGB(
-						data[surfaceOffset + j * 4 + 0],
-						data[surfaceOffset + j * 4 + 1],
-						data[surfaceOffset + j * 4 + 2]);
-				}
-
-				surfaceOffset += lr.Pitch;
-			}
-
-			phBmpBitmap = hBmpThumbnail;
-
-			offscreenSurface->UnlockRect();
-			hr = S_OK;
-		}
+	if (hBmpThumbnail == NULL) {
+		return E_FAIL;
 	}
 
-	return hr;
+	// Pointer to data is lt.pBits, each row is
+	// lr.Pitch bytes apart (often it is the same as width*bpp, but
+	// can be larger if driver uses padding)
+	LONG surfaceOffset = 0;
+	BYTE *data = (BYTE*) lr.pBits;
+	for (int i = 0; i < rtDesc.Height; i++)
+	{
+		for (int j = 0; j < rtDesc.Width; j++)
+		{
+			pPixels[(rtDesc.Height - 1 - i) * rtDesc.Width + j] = RGB(
+				data[surfaceOffset + j * 4 + 0],
+				data[surfaceOffset + j * 4 + 1],
+				data[surfaceOffset + j * 4 + 2]);
+		}
+
+		surfaceOffset += lr.Pitch;
+	}
+
+	phBmpBitmap = hBmpThumbnail;
+	offscreenSurface->UnlockRect();
+	return S_OK;
 }
