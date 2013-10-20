@@ -130,15 +130,15 @@ HRESULT Ls3FileRenderer::RenderScene(Ls3File &file, SIZE &size, LPDIRECT3DDEVICE
 		// Create and set the material
 		D3DMATERIAL9 material;
 		ZeroMemory(&material, sizeof(material));
-		material.Ambient.r = subset.ambientColor.r;
-		material.Ambient.g = subset.ambientColor.g;
-		material.Ambient.b = subset.ambientColor.b;
-		material.Ambient.a = subset.ambientColor.a;
+		material.Ambient.r = subset.ambientColor.r / 255.0f;
+		material.Ambient.g = subset.ambientColor.g / 255.0f;
+		material.Ambient.b = subset.ambientColor.b / 255.0f;
+		material.Ambient.a = subset.ambientColor.a / 255.0f;
 
-		material.Diffuse.r = subset.diffuseColor.r;
-		material.Diffuse.g = subset.diffuseColor.g;
-		material.Diffuse.b = subset.diffuseColor.b;
-		material.Diffuse.a = subset.diffuseColor.a;
+		material.Diffuse.r = subset.diffuseColor.r / 255.0f;
+		material.Diffuse.g = subset.diffuseColor.g / 255.0f;
+		material.Diffuse.b = subset.diffuseColor.b / 255.0f;
+		material.Diffuse.a = subset.diffuseColor.a / 255.0f;
 
 		TRY(d3ddev->SetMaterial(&material));
 
