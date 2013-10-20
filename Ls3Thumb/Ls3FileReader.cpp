@@ -459,15 +459,15 @@ void Ls3FileReader::read3DCoordinates(COORD3D &coords, xml_node<wchar_t> &node)
 	for (xml_attribute<wchar_t> *attr = node.first_attribute();
 		attr; attr = attr->next_attribute())
 	{
-		if (wcscmp(attr->name(), L"x") == 0)
+		if (wcscmp(attr->name(), L"X") == 0)
 		{
 			coords.x = _wtof(attr->value());
 		}
-		else if (wcscmp(attr->name(), L"y") == 0)
+		else if (wcscmp(attr->name(), L"Y") == 0)
 		{
 			coords.y = _wtof(attr->value());
 		}
-		else if (wcscmp(attr->name(), L"z") == 0)
+		else if (wcscmp(attr->name(), L"Z") == 0)
 		{
 			coords.z = _wtof(attr->value());
 		}
