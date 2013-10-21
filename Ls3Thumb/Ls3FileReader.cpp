@@ -214,6 +214,7 @@ void Ls3FileReader::readSubSetNode(Ls3File &file, const bool useLsbFile,
 	ZeroMemory(&subset.diffuseColor, sizeof(subset.diffuseColor));
 	ZeroMemory(&subset.renderFlags, sizeof(subset.renderFlags));
 	subset.lodMask = 0x0F; // visible in all LODs
+	subset.zBias = 0.0f;
 
 	xml_attribute<wchar_t> *diffuseAttribute = subsetNode.first_attribute(L"C");
 	if (diffuseAttribute)
@@ -233,6 +234,12 @@ void Ls3FileReader::readSubSetNode(Ls3File &file, const bool useLsbFile,
 	else
 	{
 		subset.ambientColor = subset.diffuseColor;
+	}
+
+	xml_attribute<wchar_t> *zBiasAttribute = subsetNode.first_attribute(L"zBias");
+	if (zBiasAttribute)
+	{
+		subset.zBias = _wtof(zBiasAttribute->value());
 	}
 
 	if (useLsbFile)

@@ -87,6 +87,11 @@ struct Ls3MeshSubset
 	Ls3RenderFlags renderFlags;
 
 	/**
+	 * The Z bias (depth bias) for this subset.
+	 */
+	FLOAT zBias;
+
+	/**
 	 * The mask which specifies in which LOD levels this subset should be
 	 * visible. Only the lower four bits are used, and (lodMask << i) set
 	 * means that the subset is visible in LOD 3-i (for i in 0..3).

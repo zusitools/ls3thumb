@@ -163,6 +163,7 @@ HRESULT Ls3FileRenderer::RenderScene(const Ls3File &file, const SIZE &size,
 		d3ddev->SetRenderState(D3DRS_SRCBLEND, subset.renderFlags.SRCBLEND);
 		d3ddev->SetRenderState(D3DRS_DESTBLEND, subset.renderFlags.DESTBLEND);
 		d3ddev->SetRenderState(D3DRS_SHADEMODE, subset.renderFlags.SHADEMODE);
+		d3ddev->SetRenderState(D3DRS_DEPTHBIAS, (DWORD) subset.zBias);
 
 		// Draw the mesh
 		TRY(d3ddev->SetIndices(pIndexBuffer));
