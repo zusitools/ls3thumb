@@ -21,6 +21,7 @@ struct ZUSIVERTEX {
 	COORD3D pos;
 	COORD3D normal;
 	COORD2D tex1;
+	COORD2D tex2;
 };
 
 struct TEXSTAGESETTING {

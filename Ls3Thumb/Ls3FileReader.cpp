@@ -379,10 +379,10 @@ void Ls3FileReader::readVertexNode(Ls3MeshSubset &subset,
 			vertex.tex1.v = _wtof(attr->value());
 		}
 		else if (wcscmp(attr->name(), L"U2") == 0) {
-			// vertex.tex2.u = _wtof(attr->value());
+			vertex.tex2.u = _wtof(attr->value());
 		}
 		else if (wcscmp(attr->name(), L"V2") == 0) {
-			// vertex.tex2.v = _wtof(attr->value());
+			vertex.tex2.v = _wtof(attr->value());
 		}
 	}
 }

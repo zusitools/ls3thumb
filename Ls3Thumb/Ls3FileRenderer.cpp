@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "Ls3FileRenderer.h"
 
-#define ZUSIFVF (D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_TEX1)
+#define ZUSIFVF (D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_TEX2)
 
 #define TRY(action) if (FAILED(hr = action)) { return hr; }
 
@@ -89,7 +89,7 @@ HRESULT Ls3FileRenderer::RenderScene(const Ls3File &file, const SIZE &size,
 	VOID* pData;
 	LPDIRECT3DVERTEXBUFFER9 pVertexBuffer;
 	LPDIRECT3DINDEXBUFFER9 pIndexBuffer;
-	LPDIRECT3DTEXTURE9 pTexture;
+	vector<LPDIRECT3DTEXTURE9> textures;
 
 	D3DLIGHT9 light;
 	ZeroMemory(&light, sizeof(light));
@@ -102,6 +102,8 @@ HRESULT Ls3FileRenderer::RenderScene(const Ls3File &file, const SIZE &size,
 
 	for (auto &subset : file.subsets)
 	{
+		textures.clear();
+
 		const size_t numVertices = subset.vertices.size();
 		const size_t numFaceIndices = subset.faceIndices.size();
 		const size_t numFaces = numFaceIndices / 3;
@@ -143,17 +145,18 @@ HRESULT Ls3FileRenderer::RenderScene(const Ls3File &file, const SIZE &size,
 
 		TRY(d3ddev->SetMaterial(&material));
 
-		// Load and set the texture
-		if (subset.textureFilenames.size() > 0)
+		// Load and set the textures
+		for (int i = 0; i < subset.textureFilenames.size(); i++)
 		{
-			D3DXCreateTextureFromFile(d3ddev,
-				subset.textureFilenames[0].c_str(), &pTexture);
+			LPDIRECT3DTEXTURE9 pTexture;
+			if (FAILED(D3DXCreateTextureFromFile(d3ddev,
+				subset.textureFilenames[i].c_str(), &pTexture)))
+			{
+					continue;
+			}
+			d3ddev->SetTexture(i, pTexture);
+			textures.push_back(pTexture);
 		}
-		else {
-			pTexture = NULL;
-		}
-
-		d3ddev->SetTexture(0, pTexture);
 
 		// Set render flags
 		SetTextureStageState(0, subset.renderFlags.stage1, d3ddev);
@@ -172,7 +175,8 @@ HRESULT Ls3FileRenderer::RenderScene(const Ls3File &file, const SIZE &size,
 		TRY(d3ddev->SetStreamSource(0, pVertexBuffer, 0, sizeof(ZUSIVERTEX)));
 		TRY(d3ddev->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, numVertices, 0, numFaces));
 
-		if (pTexture != NULL) {
+		for (auto &pTexture : textures)
+		{
 			pTexture->Release();
 		}
 	}
