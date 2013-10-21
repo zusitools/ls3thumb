@@ -647,22 +647,45 @@ wstring Ls3FileReader::GetZusiDataPath()
 {
 	LONG hr;
 	HKEY hZusiKey;
+	TCHAR result[MAX_PATH] = L"";
+	DWORD dwDataSize = sizeof(result);
 
-	hr = RegOpenKeyEx(HKEY_CURRENT_USER, L"Software\\Zusi3", 0,
+	// Try to read from VirtualStore first. (As this is a 64 bit plugin,
+	// it will not get redirected to VirtualStore.)
+	hr = RegOpenKeyEx(HKEY_CURRENT_USER,
+		L"Software\\Classes\\VirtualStore\\MACHINE\\SOFTWARE\\Wow6432Node\\Zusi3",
+		0, KEY_READ | KEY_WOW64_32KEY, &hZusiKey);
+	if (hr == ERROR_SUCCESS)
+	{
+		hr = RegQueryValueEx(hZusiKey, L"DatenDir", NULL, NULL,
+			(LPBYTE) result, &dwDataSize);
+		if (hr != ERROR_SUCCESS)
+		{
+			dwDataSize = sizeof(result);
+			hr = RegQueryValueEx(hZusiKey, L"DatenDirDemo", NULL, NULL,
+				(LPBYTE) result, &dwDataSize);
+		}
+
+		if (hr == ERROR_SUCCESS)
+		{
+			return wstring(result);
+		}
+	}
+
+	hr = RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"Software\\Zusi3", 0,
 		KEY_READ | KEY_WOW64_32KEY, &hZusiKey);
 
 	if (hr != ERROR_SUCCESS) {
 		return wstring();
 	}
-
-	TCHAR result[MAX_PATH] = L"";
-	DWORD dwDataSize = sizeof(result);
 	
-	hr = RegQueryValueEx(hZusiKey, L"DatenDir", NULL, NULL, (LPBYTE) result, &dwDataSize);
+	hr = RegQueryValueEx(hZusiKey, L"DatenDir", NULL, NULL,
+		(LPBYTE) result, &dwDataSize);
 	if (hr != ERROR_SUCCESS)
 	{
 		dwDataSize = sizeof(result);
-		hr = RegQueryValueEx(hZusiKey, L"DatenDirDemo", NULL, NULL, (LPBYTE) result, &dwDataSize);
+		hr = RegQueryValueEx(hZusiKey, L"DatenDirDemo", NULL, NULL,
+			(LPBYTE) result, &dwDataSize);
 	}
 
 	RegCloseKey(hZusiKey);
