@@ -279,6 +279,8 @@ void Ls3FileReader::readSubSetNode(Ls3File &file, const bool useLsbFile,
 			vertex.normal.z = vertexData[5];
 			vertex.tex1.u = vertexData[6];
 			vertex.tex1.v = vertexData[7];
+			vertex.tex2.u = vertexData[8];
+			vertex.tex2.v = vertexData[9];
 		}
 
 		UINT16 faceIndices[3];
