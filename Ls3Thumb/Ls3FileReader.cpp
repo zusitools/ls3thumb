@@ -36,6 +36,115 @@ unique_ptr<Ls3File> Ls3FileReader::readLs3File(const LPCWSTR fileName,
 	}
 }
 
+void Ls3FileReader::getIncludedFiles(const LPCWSTR fileName,
+	vector<wstring> &results)
+{
+	// Included files are collected from the following nodes:
+	// Zusi - Landschaft - lsb
+	// Zusi - Landschaft - Verknuepfte - Datei (recursive)
+	// Zusi - Landschaft - SubSet - Textur - Datei
+	
+	// Retrieve directory name from file name
+	wchar_t fileDir[MAX_PATH];
+	lstrcpyn(fileDir, fileName, MAX_PATH);
+	PathRemoveFileSpec(fileDir);
+
+	char fileNameChar[MAX_PATH];
+	size_t i;
+	wcstombs_s(&i, fileNameChar, MAX_PATH, fileName, MAX_PATH);
+
+	xml_document<wchar_t> doc;
+
+	try {
+		file<wchar_t> xmlFile(fileNameChar);
+		doc.parse<0>(xmlFile.data());
+
+		xml_node<wchar_t> *rootNode = doc.first_node(L"Zusi");
+		if (!rootNode) {
+			return;
+		}
+
+		xml_node<wchar_t> *landschaftNode =
+			rootNode->first_node(L"Landschaft");
+		if (!landschaftNode) {
+			return;
+		}
+
+		// Zusi - Landschaft - lsb
+		for (auto node = landschaftNode->first_node(L"lsb");
+			node; node = node->next_sibling(L"lsb"))
+		{
+			xml_attribute<wchar_t> *dateinameAttribute =
+				node->first_attribute(L"Dateiname");
+			if (!dateinameAttribute)
+			{
+				continue;
+			}
+
+			wstring includedFilePath = GetAbsoluteFilePath(
+				dateinameAttribute->value(), fileDir);
+			if (PathFileExists(includedFilePath.c_str())) {
+				results.push_back(wstring(includedFilePath));
+			}
+		}
+
+		// Zusi - Landschaft - Verknuepfte - Datei
+		for (auto node = landschaftNode->first_node(L"Verknuepfte");
+			node; node = node->next_sibling(L"Verknuepfte"))
+		{
+			xml_node<wchar_t> *dateiNode = node->first_node(L"Datei");
+			if (!dateiNode)
+			{
+				continue;
+			}
+
+			xml_attribute<wchar_t> *dateinameAttribute =
+				dateiNode->first_attribute(L"Dateiname");
+			if (dateinameAttribute)
+			{
+				wstring includedFilePath = GetAbsoluteFilePath(
+					dateinameAttribute->value(), fileDir);
+				if (PathFileExists(includedFilePath.c_str())) {
+					results.push_back(wstring(includedFilePath));
+
+					// TODO Prevent recursive inclusion
+					Ls3FileReader::getIncludedFiles(includedFilePath.c_str(),
+						results);
+				}
+			}
+		}
+
+		// Zusi - Landschaft - SubSet - Textur - Datei
+		for (auto node = landschaftNode->first_node(L"SubSet");
+			node; node = node->next_sibling(L"SubSet"))
+		{
+			for (auto texturNode = node->first_node(L"Textur");
+				texturNode; texturNode = texturNode->next_sibling(L"Textur"))
+			{
+				xml_node<wchar_t> *dateiNode = texturNode->first_node(L"Datei");
+				if (!dateiNode)
+				{
+					continue;
+				}
+
+				xml_attribute<wchar_t> *dateinameAttribute =
+					dateiNode->first_attribute(L"Dateiname");
+				if (dateinameAttribute)
+				{
+					wstring includedFilePath = GetAbsoluteFilePath(
+						dateinameAttribute->value(), fileDir);
+					if (PathFileExists(includedFilePath.c_str())) {
+						results.push_back(wstring(includedFilePath));
+					}
+				}
+			}
+		}
+	}
+	catch (...) {
+		return;
+	}
+}
+
 void Ls3FileReader::readZusiNode(Ls3File &file,
 	const xml_node<wchar_t> &zusiNode, const unsigned char lodMask)
 {

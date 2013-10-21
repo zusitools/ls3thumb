@@ -10,6 +10,7 @@
 #include <memory>
 
 #include "Ls3File.h"
+#include "Ls3FileModificationDate.h"
 #include "Ls3FileReader.h"
 #include "Ls3ThumbnailRenderer.h"
 
@@ -28,7 +29,7 @@ class ATL_NO_VTABLE CLs3ThumbShlExt :
 	public CComCoClass<CLs3ThumbShlExt, &CLSID_Ls3ThumbShlExt>,
 	public ILs3ThumbShlExt,
 	public IPersistFile,
-	public IExtractImage
+	public IExtractImage2
 {
 public:
 	CLs3ThumbShlExt()
@@ -43,6 +44,7 @@ BEGIN_COM_MAP(CLs3ThumbShlExt)
 	COM_INTERFACE_ENTRY(ILs3ThumbShlExt)
 	COM_INTERFACE_ENTRY(IPersistFile)
 	COM_INTERFACE_ENTRY(IExtractImage)
+	COM_INTERFACE_ENTRY(IExtractImage2)
 END_COM_MAP()
 
 
@@ -106,9 +108,23 @@ public:
 
 	STDMETHOD(GetLocation)(LPWSTR pszPathBuffer, DWORD cchMax, DWORD *pdwPriority, const SIZE *prgSize, DWORD dwRecClrDepth, DWORD *pdwFlags)
 	{
+		lstrcpyn(pszPathBuffer, m_szFilename, cchMax);
+
 		// Save requested thumbnail size
 		m_rgSize.cx = prgSize->cx;
 		m_rgSize.cy = prgSize->cy;
+		return S_OK;
+	}
+
+	// IExtractImage2
+	STDMETHOD(GetDateStamp)(FILETIME *pDateStamp)
+	{
+		wchar_t debug_buf[2048];
+		wsprintf(debug_buf, L"GetDateStamp() called for file %s\r\n", m_szFilename);
+		OutputDebugString(debug_buf);
+
+		Ls3FileModificationDate::GetLastModificationDate(m_szFilename,
+			pDateStamp);
 		return S_OK;
 	}
 

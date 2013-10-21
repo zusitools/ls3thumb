@@ -4,10 +4,10 @@
 
 
  /* File created by MIDL compiler version 8.00.0602 */
-/* at Sun Oct 20 22:21:04 2013
+/* at Mon Oct 21 21:24:36 2013
  */
 /* Compiler settings for Ls3Thumb.idl:
-    Oicf, W1, Zp8, env=Win32 (32b run), target_arch=X86 8.00.0602 
+    Oicf, W1, Zp8, env=Win64 (32b run), target_arch=AMD64 8.00.0602 
     protocol : dce , ms_ext, c_ext, robust
     error checks: allocation ref bounds_check enum stub_data 
     VC __declspec() decoration level: 

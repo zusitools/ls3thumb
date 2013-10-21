@@ -9,6 +9,7 @@
 #include <d3d9.h>
 
 #include "Ls3File.h"
+#include "Ls3FileModificationDate.h"
 #include "Ls3FileReader.h"
 #include "Ls3FileRenderer.h"
 
@@ -52,8 +53,13 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
 	initD3D(hWnd);
 
+	FILETIME lastModified;
+	SYSTEMTIME systemTime;
+	Ls3FileModificationDate::GetLastModificationDate(L"Z:\\z\\inforiese.ls3", &lastModified);
+	FileTimeToSystemTime(&lastModified, &systemTime);
+
 	MSG msg;
-	auto ls3File = Ls3FileReader::readLs3File(L"Z:\\z\\inforiese.ls3");
+	auto ls3File = Ls3FileReader::readLs3File(L"Z:\\z\\gleisbettv.ls3", 0x4);
 	SIZE windowSize;
 	windowSize.cx = SCREEN_WIDTH;
 	windowSize.cy = SCREEN_HEIGHT;

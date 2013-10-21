@@ -141,6 +141,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Ls3Thumb\Ls3File.h" />
+    <ClInclude Include="..\Ls3Thumb\Ls3FileModificationDate.h" />
     <ClInclude Include="..\Ls3Thumb\Ls3FileReader.h" />
     <ClInclude Include="..\Ls3Thumb\Ls3FileRenderer.h" />
     <ClInclude Include="..\Ls3Thumb\Ls3ThumbnailRenderer.h" />
@@ -150,6 +151,7 @@
     <ClInclude Include="..\Ls3Thumb\rapidxml-1.13\rapidxml_utils.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\Ls3Thumb\Ls3FileModificationDate.cpp" />
     <ClCompile Include="..\Ls3Thumb\Ls3FileReader.cpp" />
     <ClCompile Include="..\Ls3Thumb\Ls3FileRenderer.cpp" />
     <ClCompile Include="..\Ls3Thumb\Ls3ThumbnailRenderer.cpp" />

@@ -14,6 +14,8 @@ class Ls3FileReader
 public:
 	static unique_ptr<Ls3File> readLs3File(const LPCWSTR fileName,
 		const unsigned char lodMask = 0xF);
+	static void getIncludedFiles(const LPCWSTR fileName,
+		vector<wstring> &results);
 
 private:
 	static void readZusiNode(Ls3File &file, const xml_node<wchar_t> &zusiNode,
