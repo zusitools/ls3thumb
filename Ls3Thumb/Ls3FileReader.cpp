@@ -516,6 +516,12 @@ void Ls3FileReader::readRenderFlagsNode(Ls3MeshSubset &subset,
 		if (wcscmp(attr->name(), L"ALPHAREF") == 0) {
 			subset.renderFlags.ALPHAREF = value;
 		}
+		else if (wcscmp(attr->name(), L"ALPHABLENDENABLE") == 0) {
+			subset.renderFlags.ALPHABLENDENABLE = value;
+		}
+		else if (wcscmp(attr->name(), L"ALPHATESTENABLE") == 0) {
+			subset.renderFlags.ALPHATESTENABLE = value;
+		}
 		else if (wcscmp(attr->name(), L"SRCBLEND") == 0) {
 			subset.renderFlags.SRCBLEND = value;
 		}

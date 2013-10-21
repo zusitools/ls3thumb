@@ -160,6 +160,8 @@ HRESULT Ls3FileRenderer::RenderScene(const Ls3File &file, const SIZE &size,
 		SetTextureStageState(1, subset.renderFlags.stage2, d3ddev);
 		SetTextureStageState(2, subset.renderFlags.stage3, d3ddev);
 		d3ddev->SetRenderState(D3DRS_ALPHAREF, subset.renderFlags.ALPHAREF);
+		d3ddev->SetRenderState(D3DRS_ALPHABLENDENABLE, subset.renderFlags.ALPHABLENDENABLE);
+		d3ddev->SetRenderState(D3DRS_ALPHATESTENABLE, subset.renderFlags.ALPHATESTENABLE);
 		d3ddev->SetRenderState(D3DRS_SRCBLEND, subset.renderFlags.SRCBLEND);
 		d3ddev->SetRenderState(D3DRS_DESTBLEND, subset.renderFlags.DESTBLEND);
 		d3ddev->SetRenderState(D3DRS_SHADEMODE, subset.renderFlags.SHADEMODE);
