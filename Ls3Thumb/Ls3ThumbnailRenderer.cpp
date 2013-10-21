@@ -128,6 +128,8 @@ void Ls3ThumbnailRenderer::CleanUpDirect3D()
 
 HRESULT Ls3ThumbnailRenderer::ReadImageFromDirect3D(HBITMAP &phBmpBitmap)
 {
+	// Code adapted from http://stackoverflow.com/a/120156/1083696
+
 	HRESULT hr;
 	IDirect3DSurface9 *renderTarget;
 	hr = m_d3ddev->GetRenderTarget(0, &renderTarget);
