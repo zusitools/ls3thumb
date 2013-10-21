@@ -316,7 +316,7 @@ void Ls3FileReader::readVerknuepfteNode(Ls3File &file,
 	COORD3D pos, angle, scale;
 	ZeroMemory(&pos, sizeof(pos));
 	ZeroMemory(&angle, sizeof(angle));
-	ZeroMemory(&scale, sizeof(scale));
+	scale = { 1.0f, 1.0f, 1.0f };
 
 	xml_node<wchar_t> *pNode = verknuepfteNode.first_node(L"p");
 	if (pNode) {
@@ -325,21 +325,25 @@ void Ls3FileReader::readVerknuepfteNode(Ls3File &file,
 
 	xml_node<wchar_t> *phiNode = verknuepfteNode.first_node(L"phi");
 	if (phiNode) {
-		read3DCoordinates(pos, *phiNode);
+		read3DCoordinates(angle, *phiNode);
 	}
 
 	xml_node<wchar_t> *skNode = verknuepfteNode.first_node(L"sk");
 	if (skNode) {
-		read3DCoordinates(pos, *skNode);
+		read3DCoordinates(scale, *skNode);
 	}
 
 	unique_ptr<Ls3File> linkedFile = readLs3File(filePath.c_str(), lodMask);
 	for (auto &subset : linkedFile->subsets) {
 		subset.lodMask &= linkedLodMask;
 
-		// TODO scale/rotate vertices and their normal
+		// TODO Rotate vertices and their normal
 		for (auto &vertex : subset.vertices)
 		{
+			vertex.pos.x *= scale.x;
+			vertex.pos.y *= scale.y;
+			vertex.pos.z *= scale.z;
+
 			vertex.pos.x += pos.x;
 			vertex.pos.y += pos.y;
 			vertex.pos.z += pos.z;
