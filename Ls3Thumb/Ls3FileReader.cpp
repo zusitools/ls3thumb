@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "Ls3FileReader.h"
 
+#include "d3dx9.h" // TODO get rid of that
+
 #define LONG_LONG_TO_COLOR(colorVal) { colorVal & 0xFF, \
 	(colorVal >> 8) & 0xFF, (colorVal >> 16) & 0xFF, (colorVal >> 24) & 0xFF }
 
@@ -337,13 +339,40 @@ void Ls3FileReader::readVerknuepfteNode(Ls3File &file,
 	for (auto &subset : linkedFile->subsets) {
 		subset.lodMask &= linkedLodMask;
 
-		// TODO Rotate vertices and their normal
 		for (auto &vertex : subset.vertices)
 		{
+			// Scale
 			vertex.pos.x *= scale.x;
 			vertex.pos.y *= scale.y;
 			vertex.pos.z *= scale.z;
 
+			// Rotate
+			// TODO Hack, this should not depend on D3DX and is generally ugly.
+			if (angle.x != 0 || angle.y != 0 || angle.z != 0)
+			{
+				D3DXVECTOR3 vtmp = { vertex.pos.x, vertex.pos.y,
+					vertex.pos.z };
+				D3DXVECTOR3 ntmp = { vertex.normal.x, vertex.normal.y,
+					vertex.normal.z };
+				D3DXVECTOR3 vresult, nresult;
+
+				D3DXMATRIX rotX, rotY, rotZ, rot, tmp, normrot;
+				D3DXMatrixRotationX(&rotX, angle.x);
+				D3DXMatrixRotationY(&rotY, angle.y);
+				D3DXMatrixRotationZ(&rotZ, angle.z);
+				rot = rotX * rotY * rotZ;
+
+				D3DXMatrixTranspose(&tmp, &rot);
+				D3DXMatrixInverse(&normrot, NULL, &tmp);
+
+				D3DXVec3TransformCoord(&vresult, &vtmp, &rot);
+				D3DXVec3TransformNormal(&nresult, &ntmp, &normrot);
+
+				vertex.pos = { vresult.x, vresult.y, vresult.z };
+				vertex.normal = { nresult.x, nresult.y, nresult.z };
+			}
+
+			// Translate
 			vertex.pos.x += pos.x;
 			vertex.pos.y += pos.y;
 			vertex.pos.z += pos.z;
