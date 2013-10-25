@@ -7,7 +7,13 @@
 #define INT64_TO_COLOR(colorVal) { colorVal & 0xFF, \
 	(colorVal >> 8) & 0xFF, (colorVal >> 16) & 0xFF, 1 }
 
-unique_ptr<Ls3File> LsFileReader::readLs3File(const LPCWSTR fileName)
+// so we can use std::numeric_limits<>::max()
+#undef max
+
+#define SKIP_LINE(file) file.ignore(numeric_limits<streamsize>::max(), '\n')
+
+unique_ptr<Ls3File> LsFileReader::readLs3File(const LPCWSTR fileName,
+	const unsigned int maxElements)
 {
 	unique_ptr<Ls3File> result(new Ls3File());
 
@@ -19,40 +25,50 @@ unique_ptr<Ls3File> LsFileReader::readLs3File(const LPCWSTR fileName)
 
 	file.open(fileName);
 
-	string zusiVersion;
-	file >> zusiVersion;
+	SKIP_LINE(file); // Zusi version
 
-	int numElements;
-	file >> numElements;
+	getline(file, tmp);
+	int numElements = stoi(tmp);
+
+	if (maxElements != 0 && numElements > maxElements)
+	{
+		numElements = maxElements;
+	}
 
 	string linkedName;
-	file >> linkedName;
-	while (linkedName.compare("#")) {
-		float x, y, z, phix, phiy, phiz;
-		file >> x >> y >> z >> phix >> phiy >> phiz;
-		file >> linkedName;
+	getline(file, linkedName);
+	while (linkedName.compare("#") && !file.eof()) {
+		for (int i = 0; i < 6; i++) {
+			SKIP_LINE(file);
+		}
+
+		getline(file, linkedName);
 	}
 
 	for (int elIndex = 0; elIndex < numElements; elIndex++) {
-		int numPoints;
-		file >> numPoints;
+		getline(file, tmp);
+		unsigned int numPoints = stoi(tmp);
 
 		if (numPoints == 0) {
 			// Light source
 			for (int i = 0; i < 10; i++) {
-				file >> tmp;
+				SKIP_LINE(file);
 			}
 		}
 		else {
-			file >> tmp;
+			SKIP_LINE(file);
 
 			vector<ZUSIVERTEX> vertices;
 			for (int i = 0; i < numPoints; i++) {
 				vertices.push_back(ZUSIVERTEX());
 				ZUSIVERTEX &vertex = vertices.back();
 				ZeroMemory(&vertex, sizeof(vertex));
+
 				string x, y, z;
-				file >> x >> y >> z;
+				getline(file, x);
+				getline(file, y);
+				getline(file, z);
+
 				x.replace(x.find(','), 1, 1, '.');
 				y.replace(y.find(','), 1, 1, '.');
 				z.replace(z.find(','), 1, 1, '.');
@@ -60,14 +76,13 @@ unique_ptr<Ls3File> LsFileReader::readLs3File(const LPCWSTR fileName)
 				vertex.pos = { stof(x), stof(y), stof(z) };
 			}
 
-			int64_t color;
-			file >> color;
+			getline(file, tmp);
+			int64_t color = stol(tmp);
 
 			for (int i = 0; i < 6; i++) {
-				file >> tmp;
+				SKIP_LINE(file);
 			}
 
-			
 			if (subsetsByColor.find(color) == subsetsByColor.end()) {
 				subsetsByColor.insert(std::make_pair(color, Ls3MeshSubset()));
 				Ls3MeshSubset &subset = subsetsByColor.find(color)->second;
@@ -75,11 +90,11 @@ unique_ptr<Ls3File> LsFileReader::readLs3File(const LPCWSTR fileName)
 				subset.ambientColor = INT64_TO_COLOR(color);
 				subset.diffuseColor = subset.ambientColor;
 
-				// Standard render flags (Zusi 3 preset 1)
+				// derived from Zusi 3 preset 1
 				subset.renderFlags = { 0, 1, 1, 2, 0, 0,
-					{ 4, 0, 2, 0, 1, 0, 0, 0, 3, 3, 1 },
-					{ 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1 },
-					{ 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0 } };
+					{ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+					{ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+					{ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } };
 			}
 
 			Ls3MeshSubset &subset = subsetsByColor.find(color)->second;
