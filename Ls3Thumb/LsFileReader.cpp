@@ -9,14 +9,10 @@
 
 unique_ptr<Ls3File> LsFileReader::readLs3File(const LPCWSTR fileName)
 {
-	char fileNameChar[MAX_PATH];
-	size_t i;
-	wcstombs_s(&i, fileNameChar, MAX_PATH, fileName, MAX_PATH);
-
 	unique_ptr<Ls3File> result(new Ls3File());
 
 	// Store subsets by their color.
-	unordered_map<int64_t, Ls3MeshSubset> subsets;
+	unordered_map<int64_t, Ls3MeshSubset> subsetsByColor;
 
 	ifstream file;
 	string tmp;
@@ -62,7 +58,6 @@ unique_ptr<Ls3File> LsFileReader::readLs3File(const LPCWSTR fileName)
 				z.replace(z.find(','), 1, 1, '.');
 
 				vertex.pos = { stof(x), stof(y), stof(z) };
-				vertex.normal = { -1, -1, -1 };
 			}
 
 			int64_t color;
@@ -72,21 +67,26 @@ unique_ptr<Ls3File> LsFileReader::readLs3File(const LPCWSTR fileName)
 				file >> tmp;
 			}
 
-			if (subsets.find(color) == subsets.end()) {
-				subsets.insert(std::make_pair(color, Ls3MeshSubset()));
-			}
-			Ls3MeshSubset &subset = subsets.find(color)->second;
-			subset.ambientColor = INT64_TO_COLOR(color);
-			subset.diffuseColor = subset.ambientColor;
+			
+			if (subsetsByColor.find(color) == subsetsByColor.end()) {
+				subsetsByColor.insert(std::make_pair(color, Ls3MeshSubset()));
+				Ls3MeshSubset &subset = subsetsByColor.find(color)->second;
 
-			subset.renderFlags = { 0, 1, 1, 2, 0, 0,
-			{ 4, 0, 2, 0, 1, 0, 0, 0, 3, 3, 1 },
-			{ 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1 },
-			{ 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0 } };
+				subset.ambientColor = INT64_TO_COLOR(color);
+				subset.diffuseColor = subset.ambientColor;
+
+				// Standard render flags (Zusi 3 preset 1)
+				subset.renderFlags = { 0, 1, 1, 2, 0, 0,
+					{ 4, 0, 2, 0, 1, 0, 0, 0, 3, 3, 1 },
+					{ 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1 },
+					{ 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0 } };
+			}
+
+			Ls3MeshSubset &subset = subsetsByColor.find(color)->second;
 
 			int faceIndex = subset.vertices.size();
 			for (int i = 0; i < vertices.size(); i++) {
-				subset.vertices.push_back(ZUSIVERTEX(vertices[i]));
+				subset.vertices.push_back(vertices[i]);
 			}
 
 			for (int i = 1; i < vertices.size() - 1; i++) {
@@ -99,8 +99,8 @@ unique_ptr<Ls3File> LsFileReader::readLs3File(const LPCWSTR fileName)
 		}
 	}
 
-	for (auto &subset : subsets) {
-		result->subsets.push_back(subset.second);
+	for (auto &colorAndSubset : subsetsByColor) {
+		result->subsets.push_back(colorAndSubset.second);
 	}
 
 	return result;
