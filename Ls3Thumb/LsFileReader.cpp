@@ -90,9 +90,11 @@ unique_ptr<Ls3File> LsFileReader::readLs3File(const LPCWSTR fileName)
 			}
 
 			for (int i = 1; i < vertices.size() - 1; i++) {
-				subset.faceIndices.push_back(faceIndex + i);
-				subset.faceIndices.push_back(faceIndex + i + 1);
+				// Reverse the order of the faces as Zusi 2 uses a LH
+				// coordinate system
 				subset.faceIndices.push_back(faceIndex);
+				subset.faceIndices.push_back(faceIndex + i + 1);
+				subset.faceIndices.push_back(faceIndex + i);
 			}
 		}
 	}
