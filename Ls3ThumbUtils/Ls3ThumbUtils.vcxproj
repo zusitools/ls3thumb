@@ -145,6 +145,7 @@
     <ClInclude Include="..\Ls3Thumb\Ls3FileReader.h" />
     <ClInclude Include="..\Ls3Thumb\Ls3FileRenderer.h" />
     <ClInclude Include="..\Ls3Thumb\Ls3ThumbnailRenderer.h" />
+    <ClInclude Include="..\Ls3Thumb\LsFileReader.h" />
     <ClInclude Include="..\Ls3Thumb\rapidxml-1.13\rapidxml.hpp" />
     <ClInclude Include="..\Ls3Thumb\rapidxml-1.13\rapidxml_iterators.hpp" />
     <ClInclude Include="..\Ls3Thumb\rapidxml-1.13\rapidxml_print.hpp" />
@@ -155,6 +156,7 @@
     <ClCompile Include="..\Ls3Thumb\Ls3FileReader.cpp" />
     <ClCompile Include="..\Ls3Thumb\Ls3FileRenderer.cpp" />
     <ClCompile Include="..\Ls3Thumb\Ls3ThumbnailRenderer.cpp" />
+    <ClCompile Include="..\Ls3Thumb\LsFileReader.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

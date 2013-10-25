@@ -10,6 +10,7 @@
 
 #include "Ls3File.h"
 #include "Ls3FileModificationDate.h"
+#include "LsFileReader.h"
 #include "Ls3FileReader.h"
 #include "Ls3FileRenderer.h"
 
@@ -59,7 +60,8 @@ int WINAPI WinMain(HINSTANCE hInstance,
 	FileTimeToSystemTime(&lastModified, &systemTime);
 
 	MSG msg;
-	auto ls3File = Ls3FileReader::readLs3File(L"Z:\\z\\gleisbettv.ls3", 0x4);
+	//auto ls3File = LsFileReader::readLs3File(L"Z:\\z\\wuerfel.ls");
+	auto ls3File = LsFileReader::readLs3File(L"C:\\DB_517.ls");
 	SIZE windowSize;
 	windowSize.cx = SCREEN_WIDTH;
 	windowSize.cy = SCREEN_HEIGHT;
