@@ -12,6 +12,7 @@
 #include "Ls3File.h"
 #include "Ls3FileModificationDate.h"
 #include "Ls3FileReader.h"
+#include "LsFileReader.h"
 #include "Ls3ThumbnailRenderer.h"
 
 #include "Ls3Thumb_i.h"
@@ -88,7 +89,14 @@ public:
 		OutputDebugString(debug_buf);
 
 		// Only show subsets visible in LOD1 when linked files are displayed.
-		auto ls3File = Ls3FileReader::readLs3File(m_szFilename, 0x04);
+		unique_ptr<Ls3File> ls3File;
+
+		if (_wcsicmp(&m_szFilename[wcslen(m_szFilename) - 3], L".ls") == 0) {
+			ls3File = LsFileReader::readLs3File(m_szFilename);
+		}
+		else {
+			ls3File = Ls3FileReader::readLs3File(m_szFilename, 0x04);
+		}
 
 		if (ls3File->subsets.size() == 0) {
 			wsprintf(debug_buf, L"File %s is empty, doing nothing\r\n",
