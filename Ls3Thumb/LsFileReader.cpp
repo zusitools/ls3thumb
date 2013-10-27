@@ -69,9 +69,15 @@ unique_ptr<Ls3File> LsFileReader::readLs3File(const LPCWSTR fileName,
 				getline(file, y);
 				getline(file, z);
 
-				x.replace(x.find(','), 1, 1, '.');
-				y.replace(y.find(','), 1, 1, '.');
-				z.replace(z.find(','), 1, 1, '.');
+				if (x.find(',') != string::npos) {
+					x.replace(x.find(','), 1, 1, '.');
+				}
+				if (y.find(',') != string::npos) {
+					y.replace(y.find(','), 1, 1, '.');
+				}
+				if (z.find(',') != string::npos) {
+					z.replace(z.find(','), 1, 1, '.');
+				}
 
 				vertex.pos = { stof(x), stof(y), stof(z) };
 			}
