@@ -93,13 +93,14 @@ public:
 		wsprintf(debug_buf, L"Extract() called for file %s\r\n", m_szFilename);
 		OutputDebugString(debug_buf);
 
-		// Only show subsets visible in LOD1 when linked files are displayed.
 		unique_ptr<Ls3File> ls3File;
 
 		if (_wcsicmp(&m_szFilename[wcslen(m_szFilename) - 3], L".ls") == 0) {
 			ls3File = LsFileReader::readLs3File(m_szFilename, 1000);
 		}
 		else {
+			// Only show subsets visible in LOD1 when linked files are
+			// displayed.
 			ls3File = Ls3FileReader::readLs3File(m_szFilename, 0x04);
 		}
 
