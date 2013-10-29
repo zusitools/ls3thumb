@@ -6,6 +6,7 @@
 #include "shobjidl.h"
 #include "windows.h"
 #include "windowsx.h"
+#include "Thumbcache.h"
 
 #include <memory>
 
@@ -30,7 +31,9 @@ class ATL_NO_VTABLE CLs3ThumbShlExt :
 	public CComCoClass<CLs3ThumbShlExt, &CLSID_Ls3ThumbShlExt>,
 	public ILs3ThumbShlExt,
 	public IPersistFile,
-	public IExtractImage2
+	public IExtractImage2,
+	public IInitializeWithFile,
+	public IThumbnailProvider
 {
 public:
 	CLs3ThumbShlExt()
@@ -46,6 +49,8 @@ BEGIN_COM_MAP(CLs3ThumbShlExt)
 	COM_INTERFACE_ENTRY(IPersistFile)
 	COM_INTERFACE_ENTRY(IExtractImage)
 	COM_INTERFACE_ENTRY(IExtractImage2)
+	COM_INTERFACE_ENTRY(IInitializeWithFile)
+	COM_INTERFACE_ENTRY(IThumbnailProvider)
 END_COM_MAP()
 
 
@@ -134,6 +139,27 @@ public:
 		Ls3FileModificationDate::GetLastModificationDate(m_szFilename,
 			pDateStamp);
 		return S_OK;
+	}
+
+	// IInitializeWithFile
+	STDMETHOD(Initialize)(LPCWSTR pszFilePath, DWORD grfMode) {
+		wchar_t debug_buf[2048];
+		wsprintf(debug_buf, L"Ls3Thumb: Initialize() called for file %s\r\n", pszFilePath);
+		OutputDebugString(debug_buf);
+
+		lstrcpyn(m_szFilename, pszFilePath, MAX_PATH);
+		return S_OK;
+	}
+
+	// IThumbnailProvider
+	STDMETHOD(GetThumbnail)(UINT cx, HBITMAP *phbmp, WTS_ALPHATYPE *pdwAlpha)
+	{
+		wchar_t debug_buf[2048];
+		wsprintf(debug_buf, L"Ls3Thumb: GetThumbnail() called for file %s\r\n", m_szFilename);
+		OutputDebugString(debug_buf);
+
+		m_rgSize = { cx, cx };
+		return Extract(phbmp);
 	}
 
 protected:
