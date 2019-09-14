@@ -159,7 +159,7 @@ public:
 		wsprintf(debug_buf, L"Ls3Thumb: GetThumbnail() called for file %s\r\n", m_szFilename);
 		OutputDebugString(debug_buf);
 
-		m_rgSize = { cx, cx };
+		m_rgSize = { static_cast<LONG>(cx), static_cast<LONG>(cx) };
 		return Extract(phbmp);
 	}
 

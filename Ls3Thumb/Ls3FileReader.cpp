@@ -3,8 +3,8 @@
 
 #include "d3dx9.h" // TODO get rid of that
 
-#define LONG_LONG_TO_COLOR(colorVal) { colorVal & 0xFF, \
-	(colorVal >> 8) & 0xFF, (colorVal >> 16) & 0xFF, (colorVal >> 24) & 0xFF }
+#define LONG_LONG_TO_COLOR(colorVal) { static_cast<BYTE>(colorVal & 0xFF), \
+	static_cast<BYTE>((colorVal >> 8) & 0xFF), static_cast<BYTE>((colorVal >> 16) & 0xFF), static_cast<BYTE>((colorVal >> 24) & 0xFF) }
 
 unique_ptr<Ls3File> Ls3FileReader::readLs3File(const LPCWSTR fileName,
 	const unsigned char lodMask)

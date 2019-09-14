@@ -4,8 +4,8 @@
 #include <string>
 #include <unordered_map>
 
-#define INT64_TO_COLOR(colorVal) { colorVal & 0xFF, \
-	(colorVal >> 8) & 0xFF, (colorVal >> 16) & 0xFF, 1 }
+#define INT64_TO_COLOR(colorVal) { static_cast<BYTE>(colorVal & 0xFF), \
+	static_cast<BYTE>((colorVal >> 8) & 0xFF), static_cast<BYTE>((colorVal >> 16) & 0xFF), 1 }
 
 // so we can use std::numeric_limits<>::max()
 #undef max
