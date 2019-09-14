@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "LsFileReader.h"
 #include <fstream>
 #include <string>

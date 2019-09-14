@@ -1,7 +1,10 @@
-#include "stdafx.h"
 #include "Ls3FileReader.h"
 
+#pragma comment (lib, "advapi32.lib")
+#pragma comment (lib, "shlwapi.lib")
+
 #include "d3dx9.h" // TODO get rid of that
+#include <shlwapi.h>
 
 #define LONG_LONG_TO_COLOR(colorVal) { static_cast<BYTE>(colorVal & 0xFF), \
 	static_cast<BYTE>((colorVal >> 8) & 0xFF), static_cast<BYTE>((colorVal >> 16) & 0xFF), static_cast<BYTE>((colorVal >> 24) & 0xFF) }

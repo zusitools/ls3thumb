@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "Ls3FileModificationDate.h"
 #include "Ls3FileReader.h"
 

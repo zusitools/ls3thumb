@@ -3,6 +3,7 @@
 
 #pragma comment (lib, "d3d9.lib")
 #pragma comment (lib, "d3dx9.lib")
+#pragma comment (lib, "user32.lib")
 
 #include <windows.h>
 #include <windowsx.h>

@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "Ls3FileRenderer.h"
 
 #define ZUSIFVF (D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_TEX2)

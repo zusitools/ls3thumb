@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "Ls3ThumbnailRenderer.h"
 #include "Ls3FileRenderer.h"
 

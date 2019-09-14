@@ -1,6 +1,5 @@
 // dllmain.cpp : Implementation of DllMain.
 
-#include "stdafx.h"
 #include "resource.h"
 #include "Ls3Thumb_i.h"
 #include "dllmain.h"
