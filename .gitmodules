@@ -1,0 +1,3 @@
+[submodule "ls3render/parser"]
+	path = ls3render/parser
+	url = https://github.com/zusitools/parser.git
