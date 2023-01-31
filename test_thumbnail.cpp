@@ -32,7 +32,7 @@ std::optional<CLSID> GetEncoderClsid(std::string_view format) {
     return std::nullopt;
   }
 
-  std::vector<byte> imageCodecInfos(size);
+  std::vector<unsigned char> imageCodecInfos(size);
   Gdiplus::ImageCodecInfo *pImageCodecInfos =
       reinterpret_cast<ImageCodecInfo *>(imageCodecInfos.data());
   GetImageEncoders(num, imageCodecInfos.size(), pImageCodecInfos);
