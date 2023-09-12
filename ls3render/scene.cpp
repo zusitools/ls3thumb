@@ -2,10 +2,12 @@
 
 #include <atomic>
 #include <fstream>
+#include <memory>
 #include <optional>
 
 #include "./render_object.hpp"
 #include "./utils.hpp"
+#include "../debug.hpp"
 
 #include "zusi_parser/utils.hpp"
 #include "zusi_parser/zusi_parser.hpp"
@@ -39,64 +41,113 @@ public:
     const auto &dateinameOsPfad = dateiname.alsOsPfad();
     std::unique_ptr<Zusi> zusi_datei = zusixml::tryParseFile(dateinameOsPfad);
     if (!zusi_datei) {
-      std::cerr << "Error parsing " << dateinameOsPfad << "\n";
+      DEBUG("Error parsing file");
+      DEBUG(dateinameOsPfad);
       return false;
     }
-    auto *ls3_datei = zusi_datei->Landschaft.get();
+    auto *landschaft = zusi_datei->Landschaft.get();
+    if (landschaft) {
+      if (!landschaft->lsb.Dateiname.empty()) {
+        const std::string lsb_pfad =
+            zusixml::ZusiPfad::vonZusiPfad(landschaft->lsb.Dateiname, dateiname)
+                .alsOsPfad();
 
-    if (!ls3_datei->lsb.Dateiname.empty()) {
-      std::string lsb_pfad =
-          zusixml::ZusiPfad::vonZusiPfad(ls3_datei->lsb.Dateiname, dateiname)
-              .alsOsPfad();
-
-      std::ifstream lsb_stream;
-      lsb_stream.exceptions(std::ifstream::failbit | std::ifstream::eofbit |
-                            std::ifstream::badbit);
-      try {
-        lsb_stream.open(lsb_pfad, std::ios::in | std::ios::binary);
-      } catch (const std::ifstream::failure &e) {
-        std::cerr << lsb_pfad << ": open() failed: " << e.what();
-        return false;
-      }
-
-      try {
-        for (const auto &mesh_subset : ls3_datei->children_SubSet) {
-          static_assert(sizeof(Vertex) == 40, "Wrong size of Vertex");
-          static_assert(offsetof(Vertex, p) == 0, "Wrong offset of Vertex::p");
-          static_assert(offsetof(Vertex, n) == 12, "Wrong offset of Vertex::n");
-          static_assert(offsetof(Vertex, U) == 24, "Wrong offset of Vertex::U");
-          static_assert(offsetof(Vertex, V) == 28, "Wrong offset of Vertex::V");
-          static_assert(offsetof(Vertex, U2) == 32,
-                        "Wrong offset of Vertex::U2");
-          static_assert(offsetof(Vertex, V2) == 36,
-                        "Wrong offset of Vertex::V2");
-          mesh_subset->children_Vertex.resize(mesh_subset->MeshV);
-          lsb_stream.read(
-              reinterpret_cast<char *>(mesh_subset->children_Vertex.data()),
-              mesh_subset->children_Vertex.size() * sizeof(Vertex));
-
-          static_assert(sizeof(Face) == 6, "Wrong size of Face");
-          assert(mesh_subset->MeshI % 3 == 0);
-          mesh_subset->children_Face.resize(mesh_subset->MeshI / 3);
-          lsb_stream.read(
-              reinterpret_cast<char *>(mesh_subset->children_Face.data()),
-              mesh_subset->children_Face.size() * sizeof(Face));
+        std::ifstream lsb_stream;
+        lsb_stream.exceptions(std::ifstream::failbit | std::ifstream::eofbit |
+                              std::ifstream::badbit);
+        try {
+          lsb_stream.open(lsb_pfad, std::ios::in | std::ios::binary);
+        } catch (const std::ifstream::failure &e) {
+          std::cerr << lsb_pfad << ": open() failed: " << e.what();
+          return false;
         }
-      } catch (const std::ifstream::failure &e) {
-        std::cerr << lsb_pfad << ": read() failed: " << e.what();
-        return false;
-      }
 
-      lsb_stream.exceptions(std::ios_base::iostate());
-      lsb_stream.peek();
-      assert(lsb_stream.eof());
+        try {
+          for (const auto &mesh_subset : landschaft->children_SubSet) {
+            static_assert(sizeof(Vertex) == 40, "Wrong size of Vertex");
+            static_assert(offsetof(Vertex, p) == 0,
+                          "Wrong offset of Vertex::p");
+            static_assert(offsetof(Vertex, n) == 12,
+                          "Wrong offset of Vertex::n");
+            static_assert(offsetof(Vertex, U) == 24,
+                          "Wrong offset of Vertex::U");
+            static_assert(offsetof(Vertex, V) == 28,
+                          "Wrong offset of Vertex::V");
+            static_assert(offsetof(Vertex, U2) == 32,
+                          "Wrong offset of Vertex::U2");
+            static_assert(offsetof(Vertex, V2) == 36,
+                          "Wrong offset of Vertex::V2");
+            mesh_subset->children_Vertex.resize(mesh_subset->MeshV);
+            lsb_stream.read(
+                reinterpret_cast<char *>(mesh_subset->children_Vertex.data()),
+                mesh_subset->children_Vertex.size() * sizeof(Vertex));
+
+            static_assert(sizeof(Face) == 6, "Wrong size of Face");
+            assert(mesh_subset->MeshI % 3 == 0);
+            mesh_subset->children_Face.resize(mesh_subset->MeshI / 3);
+            lsb_stream.read(
+                reinterpret_cast<char *>(mesh_subset->children_Face.data()),
+                mesh_subset->children_Face.size() * sizeof(Face));
+          }
+        } catch (const std::ifstream::failure &e) {
+          DEBUG("Error reading LSB file");
+          DEBUG(e.what());
+          return false;
+        }
+
+        lsb_stream.exceptions(std::ios_base::iostate());
+        lsb_stream.peek();
+        assert(lsb_stream.eof());
+      }
+    } else if (auto *formkurve = zusi_datei->Formkurve.get()) {
+      zusi_datei->Landschaft = std::make_unique<Landschaft>();
+      landschaft = zusi_datei->Landschaft.get();
+
+      auto subset =
+          std::make_unique<SubSet>(SubSet{std::move(*formkurve->Material)});
+      subset->children_Vertex.reserve(2 * formkurve->children_Punkt.size());
+      subset->children_Face.reserve(2 * formkurve->children_Punkt.size());
+
+      const auto len = std::max(subset->MeterProTex, subset->MeterProTex2);
+
+      Vertex musterVertex{};
+      for (const auto &punkt : formkurve->children_Punkt) {
+        musterVertex.p.X = punkt->X;
+        musterVertex.p.Y = -len / 2.0;
+        musterVertex.p.Z = punkt->Y;
+        musterVertex.U = formkurve->TexIstU ? punkt->tex : 0;
+        musterVertex.U2 = formkurve->TexIstU ? punkt->tex : 0;
+        musterVertex.V = formkurve->TexIstU ? 0 : punkt->tex;
+        musterVertex.V2 = formkurve->TexIstU ? 0 : punkt->tex;
+        musterVertex.n.X = punkt->nX;
+        musterVertex.n.Y = 1;
+        musterVertex.n.Z = punkt->nY;
+        subset->children_Vertex.emplace_back(musterVertex);
+
+        musterVertex.p.Y = len / 2.0;
+        (formkurve->TexIstU ? musterVertex.V : musterVertex.U) =
+            (subset->MeterProTex == 0 ? 0 : len / subset->MeterProTex);
+        (formkurve->TexIstU ? musterVertex.V2 : musterVertex.U2) =
+            (subset->MeterProTex2 == 0 ? 0 : len / subset->MeterProTex2);
+        subset->children_Vertex.emplace_back(musterVertex);
+      }
+      for (size_t i = 0; i + 1 < formkurve->children_Punkt.size(); ++i) {
+        subset->children_Face.push_back(
+            Face{{2 * i + 0, 2 * i + 1, 2 * i + 2}});
+        subset->children_Face.push_back(
+            Face{{2 * i + 3, 2 * i + 2, 2 * i + 1}});
+      }
+      landschaft->children_SubSet.push_back(std::move(subset));
+    } else {
+      DEBUG("Keine Zusi-Datei");
+      return false;
     }
 
     if (abbrechen.load()) {
       return false;
     }
 
-    for (auto &mesh_subset : ls3_datei->children_SubSet) {
+    for (auto &mesh_subset : landschaft->children_SubSet) {
       for (auto &textur : mesh_subset->children_Textur) {
         if (!textur->Datei.Dateiname.empty()) {
           textur->Datei.Dateiname =
@@ -109,11 +160,11 @@ public:
     m_Ls3Dateien.push_back(std::move(zusi_datei)); // keep for later
 
     auto render_object =
-        std::make_unique<Ls3RenderObject>(*ls3_datei, ani_positionen);
+        std::make_unique<Ls3RenderObject>(*landschaft, ani_positionen);
     render_object->setTransform(transform);
     m_RenderObjects.push_back(std::move(render_object));
 
-    for (size_t counter = 0, len = ls3_datei->children_Verknuepfte.size();
+    for (size_t counter = 0, len = landschaft->children_Verknuepfte.size();
          counter < len; counter++) {
       if (abbrechen.load()) {
         return false;
@@ -126,7 +177,7 @@ public:
       // denselben Abstand zur Kamera haben. Der Z-Offset wird spaeter vor dem
       // Rendern beruecksichtigt.
       size_t i = len - 1 - counter;
-      const auto &verkn = ls3_datei->children_Verknuepfte[i];
+      const auto &verkn = landschaft->children_Verknuepfte[i];
 
       if (verkn->SichtbarAb > 0) {
         continue;
@@ -139,10 +190,10 @@ public:
       }
       std::experimental::optional<AniPunkt> verkn_animation;
 
-      for (const auto &v : ls3_datei->children_VerknAnimation) {
+      for (const auto &v : landschaft->children_VerknAnimation) {
         std::experimental::optional<float> t;
         if (v->AniIndex >= 0 && static_cast<decltype(i)>(v->AniIndex) == i) {
-          for (const auto &def : ls3_datei->children_Animation) {
+          for (const auto &def : landschaft->children_Animation) {
             if (std::find_if(std::begin(def->children_AniNrs),
                              std::end(def->children_AniNrs),
                              [&v](const auto &aniNrs) {

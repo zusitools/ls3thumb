@@ -9,6 +9,7 @@ add_subdirectory(parser)
 generate_zusi_parser(zusi_parser ${CMAKE_CURRENT_BINARY_DIR}/zusi_parser
   WHITELIST
     Zusi::Landschaft
+    Zusi::Formkurve
 
     Landschaft::lsb
     Landschaft::SubSet
@@ -26,6 +27,8 @@ generate_zusi_parser(zusi_parser ${CMAKE_CURRENT_BINARY_DIR}/zusi_parser
     Material::zBias
     Material::Textur
     Material::RenderFlags
+    Material::MeterProTex
+    Material::MeterProTex2
 
     SubSet::NachtEinstellung
     SubSet::MeshI
@@ -78,6 +81,16 @@ generate_zusi_parser(zusi_parser ${CMAKE_CURRENT_BINARY_DIR}/zusi_parser
     Quaternion::W
 
     Verknuepfte::SichtbarAb
+
+    Formkurve::Punkt
+    Formkurve::Material
+    Formkurve::TexIstU
+
+    FormkurvenPunkt::X
+    FormkurvenPunkt::Y
+    FormkurvenPunkt::nX
+    FormkurvenPunkt::nY
+    FormkurvenPunkt::tex
   IGNORE_UNKNOWN)
 
 # TODO: per-target

@@ -105,12 +105,15 @@ STDAPI DllRegisterServer(VOID) {
 
     // Thumbnail handler
     { HKEY_CLASSES_ROOT, "Zusi3DEditorls3\\shellex\\{e357fccd-a995-4576-b01f-234630154e96}", {}, STRCLSID_Ls3ThumbShlExt },
+    { HKEY_CLASSES_ROOT, "xmlfile\\shellex\\{e357fccd-a995-4576-b01f-234630154e96}", {}, STRCLSID_Ls3ThumbShlExt },
     
     // IExtractImage
     { HKEY_CLASSES_ROOT, "Zusi3DEditorls3\\shellex\\{BB2E617C-0920-11d1-9A0B-00C04FC2D6C1}", {}, STRCLSID_Ls3ThumbShlExt },
+    { HKEY_CLASSES_ROOT, "xmlfile\\shellex\\{BB2E617C-0920-11d1-9A0B-00C04FC2D6C1}", {}, STRCLSID_Ls3ThumbShlExt },
     
     // Preview handler
     { HKEY_CLASSES_ROOT, "Zusi3DEditorls3\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}", {}, STRCLSID_Ls3ThumbShlExt },
+    { HKEY_CLASSES_ROOT, "xmlfile\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}", {}, STRCLSID_Ls3ThumbShlExt },
     { HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers", STRCLSID_Ls3ThumbShlExt, "Ls3Thumb"},
 
     { HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\Shell Extensions\\Approved", STRCLSID_Ls3ThumbShlExt, "Ls3Thumb" }

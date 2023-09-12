@@ -35,6 +35,7 @@ static const std::unordered_map<int, float> AniPositionen{
     {14, 0.5f},  // Neigetechnik
 };
 static const std::string_view lodLs3Ext(".lod.ls3");
+static const std::string_view shapeXmlExt(".shape.xml");
 
 template <typename T>
 struct scope_exit {
@@ -307,10 +308,16 @@ STDMETHODIMP Ls3ThumbShellExt::Extract(HBITMAP *phBmpThumbnail) {
   }
 }
 
-bool IsLodLs3(const std::string fileName) {
+bool IsLodLs3(const std::string &fileName) {
   return ((fileName.size() >= lodLs3Ext.size()) &&
           (0 == _strnicmp(&fileName[fileName.size() - lodLs3Ext.size()],
                           lodLs3Ext.data(), lodLs3Ext.size())));
+}
+
+bool IsShapeXml(const std::string &fileName) {
+  return ((fileName.size() >= shapeXmlExt.size()) &&
+          (0 == _strnicmp(&fileName[fileName.size() - shapeXmlExt.size()],
+                          shapeXmlExt.data(), shapeXmlExt.size())));
 }
 
 STDMETHODIMP Ls3ThumbShellExt::GetLocation(LPWSTR pszPathBuffer, DWORD cchMax,
@@ -318,7 +325,7 @@ STDMETHODIMP Ls3ThumbShellExt::GetLocation(LPWSTR pszPathBuffer, DWORD cchMax,
                                            const SIZE *prgSize,
                                            DWORD /*dwRecClrDepth*/,
                                            DWORD * /*pdwFlags*/) {
-  if (!IsLodLs3(_fileName)) {
+  if (!IsLodLs3(_fileName) && !IsShapeXml(_fileName)) {
     return E_NOTIMPL;
   }
 
@@ -338,7 +345,7 @@ STDMETHODIMP Ls3ThumbShellExt::Initialize(LPCWSTR pszFilePath,
 
 STDMETHODIMP Ls3ThumbShellExt::GetThumbnail(UINT cx, HBITMAP *phbmp,
                                             WTS_ALPHATYPE *pdwAlpha) {
-  if (!IsLodLs3(_fileName)) {
+  if (!IsLodLs3(_fileName) && !IsShapeXml(_fileName)) {
     return E_NOTIMPL;
   }
 
