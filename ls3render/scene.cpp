@@ -29,7 +29,7 @@ namespace fs = std::experimental::filesystem;
 namespace ls3render {
 
 class Scene::impl {
-public:
+ public:
   bool LadeLandschaft(const zusixml::ZusiPfad &dateiname,
                       const glm::mat4 &transform,
                       const std::unordered_map<int, float> &ani_positionen,
@@ -157,7 +157,7 @@ public:
       }
     }
 
-    m_Ls3Dateien.push_back(std::move(zusi_datei)); // keep for later
+    m_Ls3Dateien.push_back(std::move(zusi_datei));  // keep for later
 
     auto render_object =
         std::make_unique<Ls3RenderObject>(*landschaft, ani_positionen);
@@ -300,14 +300,16 @@ public:
     }
   }
 
-  impl() : m_Ls3Dateien(), m_RenderObjects() {}
+  impl() : m_Ls3Dateien(), m_RenderObjects() {
+  }
 
-private:
+ private:
   std::vector<std::unique_ptr<Zusi>> m_Ls3Dateien;
   std::vector<std::unique_ptr<RenderObject>> m_RenderObjects;
 };
 
-Scene::Scene() : pImpl{std::make_unique<impl>()} {}
+Scene::Scene() : pImpl{std::make_unique<impl>()} {
+}
 Scene::~Scene() = default;
 
 bool Scene::LadeLandschaft(const zusixml::ZusiPfad &dateiname,
@@ -325,6 +327,8 @@ bool Scene::LoadIntoGraphicsCardMemory() {
 void Scene::Render(const ShaderParameters &shader_parameters) {
   pImpl->Render(shader_parameters);
 }
-void Scene::FreeGraphicsCardMemory() { pImpl->FreeGraphicsCardMemory(); }
+void Scene::FreeGraphicsCardMemory() {
+  pImpl->FreeGraphicsCardMemory();
+}
 
-} // namespace ls3render
+}  // namespace ls3render
